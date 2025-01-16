@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html lang='nl'>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Statlas</title>
+    <link rel='stylesheet' href='statlas.mainPage.css'>
+
+</head>
+
+<body>
+
+    <div class='flexbox-container horizontal'>
+
+
+
+
+        <div class='flexbox-item'>
+
+            <button id="logo-ugent" style="width: 150px; height: 100px;"></button>
+            <!-- <img src='logo_UGent_NL_RGB_0144_kleur.png' alt='Universiteit Gent' width=150px> -->
+        </div>
+
+
+
+
+        <div class='flexbox-container vertical flexbox-item nav-venster' style='width: 80%'>
+
+            <div class='flexbox-item titel'>
+
+                <span class='titel'>STATLAS</span>
+            </div>
+
+            <div class='flexbox-container horizontal'>
+
+                <div class='flexbox-item'>
+
+                    <button class='navlink' id="homeSelect"><span>Home</span></button>
+
+                </div>
+
+
+                <div class='flexbox-item'>
+
+                    <button class='navlink' id="voorWieSelect"><span>Voor wie?</span></button>
+
+                </div>
+
+                <div class='flexbox-item'>
+
+                    <button class='navlink' id="techniekenSelect"><span>Technieken</span></button>
+
+                </div>
+
+                <div class='flexbox-item'>
+
+                    <button class='navlink' id="toekomstSelect"><span>In de toekomst</span></button>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class='flexbox-container horizontal flexbox-item' id='footer' style='width:fit-content; justify-content: space-around;'>
+
+
+
+        <div class='flexbox-item' style='background-color: #eee;'>
+            <button id="logo-fppw"><img width=220px src='icoon_UGent_PP_NL_RGB_0144_kleur.png' alt='FPPW'></button>
+            <!-- <img width=200px src='icoon_UGent_PP_NL_RGB_0144_kleur.png' alt='FPPW'> -->
+        </div>
+
+        <div class='flexbox-item' style='background-color: #eee;'>
+            <p id="logo-pp01" style='margin:20px; margin-top:25px;white-space: nowrap;'>VAKGROEP DATA-ANALYSE</p>
+        </div>
+    </div>
+
+    <div class='flexbox-item hoofdtekst pagina' id="home" style="display: block">
+
+        <h1>Welkom bij Statlas!</h1>
+
+        <br>
+
+        <p>Begin 2022 lanceerden we deze website om op een overzichtelijke manier te tonen hoe je R en R Studio kan gebruiken om allerlei statistische technieken toe te passen.</p>
+
+        <br>
+
+        <p> Het doel is om onderzoekers een leidraad te bieden om zelf data te analyseren. De demonstraties gebeuren altijd aan de hand van een realistische onderzoeksvraag. De data die worden geanalyseerd zijn telkens beschikbaar via een link zodat gebruikers
+            de analyses kunnen repliceren. </p>
+
+        <br> 
+
+        <p>Statlas is voortdurend aan het groeien. Op termijn willen we een demonstratie aanbieden van alle technieken die courant in onderzoek aan de faculteit voorkomen.</p>
+
+        <br>
+
+        <p>If you are a researcher looking for support in English, we recommend you take a look at the <a href="https://eur03.safelinks.protection.outlook.com/?url=https%3A%2F%2Fstats.oarc.ucla.edu%2F&data=05%7C01%7CMichiel.Beelaerts%40UGent.be%7C5488d17b405a463b8ab708da84e22ea9%7Cd7811cdeecef496c8f91a1786241b99c%7C1%7C0%7C637968404215695454%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&sdata=MqjvEM0R2Hi%2F99j5MQZcjE52KaWigktGFoSryu8f4J0%3D&reserved=0" target="_blank">website of UCLA</a>. It contains a number of demonstrations of statistical techniques using different software packages, including R.</p>
+
+
+        <br>
+
+        <p>Voor alle suggesties en meldingen van problemen kan je een e-mail sturen naar <a href="mailto:michiel.beelaerts@ugent.be">Michiel.Beelaerts@UGent.be</a>.</p>
+
+        <br>
+
+        <p style="font-size: large;">Veel plezier!</p>
+
+        <div class="whitespace-bottom"></div>
+
+    </div>
+
+
+
+    </div>
+
+    <div class='flexbox-item hoofdtekst pagina' id="voorWie">
+
+        <h1>Voor wie is deze website bedoeld?</h1>
+
+        <br>
+
+        <p>De pagina's met technieken zijn gecreëerd met onderzoekers van de Faculteit Psychologie en Pedagogische Wetenschappen in gedachten. Daaronder verstaan we iedereen aan de faculteit die een masterproef, doctoraat of wetenschappelijk artikel wil
+            schrijven.
+        </p>
+
+        <br>
+
+        <p>Natuurlijk zijn wij heel tevreden als ook onderzoekers van andere faculteiten en universiteiten Statlas nuttig vinden en gebruiken voor hun onderzoek.</p>
+
+        <div class="whitespace-bottom"></div>
+
+    </div>
+
+    <div class='flexbox-item hoofdtekst pagina' id="technieken">
+
+        <h1>Technieken</h1>
+
+        <br>
+
+        <p style="max-width: 80%">Hier vind je het volledige overzicht met alle technieken die we demonstreren. Deze lijst groeit regelmatig aan. Klik op een van de gele balken en vervolgens op een titel om de demonstratiepagina te openen.</p>
+
+        <p>In de pagina's met technieken zal je veel kleuren en knoppen zien. Om te verduidelijken waar dat allemaal voor dient hebben we
+            <a href="./andere paginas/handleiding.html" target="_blank">deze handige handleiding</a> samengesteld.
+        </p>
+
+        <p>We veronderstellen een basiskennis R. Wie voor het eerst wil kennismaken met R en R Studio kan in <a href="https://statlas.ugent.be/_book" target="_blank">dit afzonderlijke leerpad</a> terecht.</p>
+
+        <br>
+
+        <button class="categorie" id="categorie1" onclick="dropDown('grid-container1')"><span>Data verkennen</span></button>
+
+        <div class="grid-container" id="grid-container1">
+            
+            <div class="grid-item colname">Titel</div>
+            <div class="grid-item colname">Inhoud</div>
+            <div class="grid-item grid-item-3">
+                <a href='./technieken/Data verkennen/dataverkennen1_dataset_inspecteren.html' target='blank'>Dataset inspecteren</a></div>
+            <div class="grid-item grid-item-4">Hoe kan je een eerste indruk krijgen van je dataset? Welke variabelen zijn er? Hoeveel observaties?
+            </div>
+
+            <div class="grid-item grid-item-5">
+                <a href='./technieken/Data verkennen/dataverkennen2_univariaat_continu.html' target='blank'>Univariaat - continu</a>
+            </div>
+            <div class="grid-item grid-item-6">Beschrijven en visueel voorstellen van één continue variabele</div>
+
+            <div class="grid-item grid-item-7">
+                <a href='./technieken/Data verkennen/dataverkennen3_univariaat_categorisch.html' target='blank'>Univariaat - categorisch</a>
+            </div>
+            <div class="grid-item grid-item-8">Beschrijven en visueel voorstellen van één categorische variabele</div>
+
+            <div class="grid-item grid-item-9">
+                <a href='./technieken/Data verkennen/dataverkennen4_bivariaat_2xcontinu.html' target='blank'>Bivariaat - continu/continu</a>
+            </div>
+            <div class="grid-item grid-item-10">Beschrijven en visueel voorstellen van de samenhang tussen twee continue variabelen</div>
+
+            <div class="grid-item grid-item-11">
+                <a href='./technieken/Data verkennen/dataverkennen5_bivariaat_continu_en_categorisch.html' target='blank'>Bivariaat - continu/categorisch</a>
+            </div>
+            <div class="grid-item grid-item-12">Beschrijven en visueel voorstellen van de samenhang tussen een continue en een categorische variabele</div>
+
+            <div class="grid-item grid-item-13">
+                <a href='./technieken/Data verkennen/dataverkennen6_bivariaat_2xcategorisch.html' target='blank'>Bivariaat - categorisch/categorisch</a>
+            </div>
+            <div class="grid-item grid-item-14">Beschrijven en visueel voorstellen van de samenhang tussen twee categorische variabelen</div>
+
+            <div class="grid-item grid-item-15">
+                <a href='./technieken/Data verkennen/dataverkennen7_ontbrekende_data.html' target='blank'>Ontbrekende data</a>
+
+            </div>
+            <div class="grid-item grid-item-16">Wat kan je te weten komen over ontbrekende data in je dataset? Wat kan je ermee aanvangen?</div>
+
+            <div class="grid-item grid-item-17">
+                <a href='./technieken/Data verkennen/dataverkennen8_datavisualisatie_base.html' target='blank'>Datavisualisatie met base R</a>
+
+            </div>
+            <div class="grid-item grid-item-18">Overzicht van datavisualisatie met het basispakket van R</div>
+        </div>
+
+        <div style="height: 30px;"></div>
+
+        <button class="categorie" id="categorie2" onclick="dropDown('grid-container2')"><span>Toetsen met betrekking tot één of twee verwachtingen</span></button>
+
+        <div class="grid-container" id="grid-container2">
+            
+            <div class="grid-item colname">Titel</div>
+            <div class="grid-item colname">Inhoud</div>
+            <div class="grid-item grid-item-3">
+                <a href='./technieken/Toetsen mbt verwachtingen/toets-voor-een-verwachting.html' target='blank'>Toets voor een verwachting</a></div>
+            <div class="grid-item grid-item-4">Is het populatiegemiddelde verschillend van een vooropgestelde waarde?
+            </div>
+
+            <div class="grid-item grid-item-5">
+                <a href='./technieken/Toetsen mbt verwachtingen/toets-voor-twee-verwachtingen---paired.html' target='blank'>Toets voor twee verwachtingen - afhankelijke steekproeven</a>
+            </div>
+            <div class="grid-item grid-item-6">Is er een verschil in populatiegemiddelde tussen twee groepen? Elke meting in een groep is hier rechtstreeks gelinkt aan een meting in de andere groep, bv. dezelfde persoon wordt geobserveerd voor en na een behandeling. </div>
+
+            <div class="grid-item grid-item-7">
+                <a href='./technieken/Toetsen mbt verwachtingen/toets-voor-twee-verwachtingen---unpaired.html' target='blank'>Toets voor twee verwachtingen - onafhankelijke steekproeven</a>
+            </div>
+            <div class="grid-item grid-item-8">Is er een verschil in populatiegemiddelde tussen twee groepen? De steekproeven zijn hier onafhankelijk.</div>
+
+        </div>
+
+        <div style="height: 30px;"></div>
+
+        <button class="categorie" id="categorie3" onclick="dropDown('grid-container3')"><span>Lineaire regressie</span></button>
+
+        <div class="grid-container" id="grid-container3">
+            
+            <div class="grid-item colname">Titel</div>
+            <div class="grid-item colname">Inhoud</div>
+            <div class="grid-item grid-item-3">
+                <a href='./technieken/Lineaire regressie/meervoudige-lineaire-regressie--continu-.html' target='blank'>Toets over een continue predictor</a></div>
+            <div class="grid-item grid-item-4">Is er een effect van een continue predictor op een continue afhankelijke variabele?
+            </div>
+
+            <div class="grid-item grid-item-5">
+                <a href='./technieken/Lineaire regressie/meervoudige-lineaire-regressie--categorisch-.html' target='blank'>Toets over een categorische predictor</a>
+            </div>
+            <div class="grid-item grid-item-6">Is er een effect van een categorische predictor op een continue afhankelijke variabele? </div>
+
+            <div class="grid-item grid-item-7">
+                <a href='./technieken/Lineaire regressie/meervoudige-lineaire-regressie--interactie1-.html' target='blank'>Toets over een interactie-effect - categorisch/continu</a>
+            </div>
+            <div class="grid-item grid-item-8">Is er een interactie-effect tussen een categorische en een continue variabele op een continue afhankelijke variabele?</div>
+
+        </div>
+
+        <div style="height: 30px;"></div>
+
+        <button class="categorie" id="categorie4" onclick="dropDown('grid-container4')"><span>Veralgemeend lineair model: logistische regressie</span></button>
+
+        <div class="grid-container" id="grid-container4">
+            
+            <div class="grid-item colname">Titel</div>
+            <div class="grid-item colname">Inhoud</div>
+            <div class="grid-item grid-item-3">
+                <a href='./technieken/Logistische regressie/logreg.binair1.html' target='blank'>Binaire logistische regressie</a></div>
+            <div class="grid-item grid-item-4">Een binaire uitkomst wordt gemodelleerd in functie van verschillende predictoren. Fit dit model goed met de data? Hoe moet de output geïnterpreteerd worden? 
+            </div>
+            <div class="grid-item grid-item-5">
+                <a href='./technieken/Logistische regressie/logreg.binair2.html' target='blank'>Binaire logistische regressie met interactie-effecten</a></div>
+            <div class="grid-item grid-item-6">Een binaire uitkomst wordt gemodelleerd in functie van predictoren waarvan sommige met elkaar interageren. Fit dit model goed met de data? Hoe moet de output geïnterpreteerd worden? 
+            </div>
+        </div>
+
+
+        <div style="height: 30px;"></div>
+
+        <button class="categorie" id="categorie5" onclick="dropDown('grid-container5')"><span>Structural Equation Modelling</span></button>
+
+        <div class="grid-container" id="grid-container5">
+            
+            <div class="grid-item colname">Titel</div>
+            <div class="grid-item colname">Inhoud</div>
+            <div class="grid-item grid-item-3">
+                <a href='./technieken/SEM/padanalyse.html' target='blank'>Padanalyse</a></div>
+            <div class="grid-item grid-item-4">Fit een gegeven systeem van geobserveerde variabelen goed met de data? Zijn de padcoëfficiënten significant verschillend van nul?
+            </div>
+            <div class="grid-item grid-item-5">
+                <a href='./technieken/SEM/CFA.html' target='blank'>Confirmatorische factoranalyse</a></div>
+            <div class="grid-item grid-item-6">Is een vooropgestelde factorstructuur terug te vinden in een bepaalde dataset?
+            </div>
+            <div class="grid-item grid-item-7">
+                <a href='./technieken/SEM/SEM.html' target='blank'>Structural Equation Modelling</a></div>
+            <div class="grid-item grid-item-8">Fit een gegeven systeem van geobserveerde en/of latente variabelen goed met de data? Zijn de coëfficiënten significant verschillend van nul?
+            </div>
+        </div>
+
+        <div class="whitespace-bottom"></div>
+
+    </div>
+
+    <div class='flexbox-item hoofdtekst pagina' id="toekomst">
+
+        <h1>Toekomstplannen</h1>
+
+        <br>
+
+        <p>Wat zijn we in de toekomst van plan met deze website? Op de eerste plaats willen we de lijst met technieken die we behandelen geleidelijk uitbreiden.</p>
+
+
+        <p>Op dit moment zijn er plannen om pagina's te bouwen over:</p>
+
+        <ul>
+            <li>Structural Equation Modelling</li>
+            <li>Interactie-effecten tussen twee categorische variabelen</li>
+            <li>Interactie-effecten tussen twee continue variabelen</li>
+            <li>Best practices: hoe bouw ik een model? Welke variabelen neem ik op?</li>
+            <li>Logistische regressie</li>
+        </ul>
+
+        <br>
+
+        <p>En daarna? Dan laten we ons inspireren door de noden van de gebruikers van deze website, op de eerste plaats onderzoekers van de FPPW.
+        </p>
+
+        <div class="whitespace-bottom"></div>
+
+    </div>
+
+    <script>
+
+
+
+// Navigatiebalk Statlas
+
+        document.getElementById('homeSelect').addEventListener('click', function() {
+            var x = document.querySelectorAll(".pagina:not(#home)");
+
+            for (i = 0; i < x.length; i++) {
+                if (x[i].style.display === "block") {
+                    x[i].style.display = "none";
+                }
+            }
+            document.getElementById("home").style.display = "block";
+        })
+
+
+
+        document.getElementById('voorWieSelect').addEventListener('click', function() {
+            var x = document.querySelectorAll(".pagina:not(#voorWie)");
+
+            for (i = 0; i < x.length; i++) {
+                if (x[i].style.display === "block") {
+                    x[i].style.display = "none";
+                }
+            }
+
+            document.getElementById("voorWie").style.display = "block";
+
+        })
+
+        document.getElementById('techniekenSelect').addEventListener('click', function() {
+            var x = document.querySelectorAll(".pagina:not(#technieken)");
+
+            for (i = 0; i < x.length; i++) {
+                if (x[i].style.display === "block") {
+                    x[i].style.display = "none";
+                }
+            }
+
+            document.getElementById("technieken").style.display = "block";
+
+        })
+
+        document.getElementById('toekomstSelect').addEventListener('click', function() {
+            var x = document.querySelectorAll(".pagina:not(#toekomst)");
+
+            for (i = 0; i < x.length; i++) {
+                if (x[i].style.display === "block") {
+                    x[i].style.display = "none";
+                }
+            }
+
+            document.getElementById("toekomst").style.display = "block";
+
+        })
+
+
+// Overzichtspagina 'Technieken': uitklapbare balken
+
+function dropDown(menuId) {
+  var dropdownMenu = document.getElementById(menuId);
+  
+    if (dropdownMenu.style.display === "none" || dropdownMenu.style.display === "") {
+            dropdownMenu.style.display = "grid";
+            
+        } else {
+            dropdownMenu.style.display = "none";
+        };
+
+    if (dropdownMenu.style.maxHeight != "1000px") {
+        dropdownMenu.style.maxHeight = dropdownMenu.scrollHeight + 'px';
+    } else {
+        dropdownMenu.style.maxHeight = 0 + 'px';
+    }
+}
+
+
+
+// Links naar externe websites FPPW,...
+
+        document.querySelector('#logo-ugent').onclick = function() {
+            var redirectWindow = window.open('https://www.ugent.be', '_blank');
+            redirectWindow.location;
+        }
+
+        document.querySelector('#logo-fppw').onclick = function() {
+            var redirectWindow = window.open('https://www.ugent.be/pp/nl', '_blank');
+            redirectWindow.location;
+        }
+
+        document.querySelector('#logo-pp01').onclick = function() {
+            var redirectWindow = window.open('https://www.ugent.be/pp/data-analyse/en', '_blank');
+            redirectWindow.location;
+        }
+    </script>
+
+
+</body>
+
+
+</html>

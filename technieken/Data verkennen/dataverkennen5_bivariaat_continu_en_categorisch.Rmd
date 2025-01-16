@@ -1,0 +1,155 @@
+---
+title: "Data verkennen: een continue en een categorische variabele"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+Het is een goed idee om een dataset te verkennen, vooraleer je er allerlei statistische technieken op loslaat. R biedt een heel uitgebreid gamma aan functies om dat te doen. 
+
+De output van die functies dient vaak niet om te publiceren. Het is vooral de bedoeling om zelf meer inzicht te krijgen in de variabelen in je dataset en de samenhang tussen die variabelen.
+
+Op deze pagina vind je hoe je de samenhang tussen 1 continue en 1 categorische variabele kan beschrijven en visueel voorstellen.
+
+<br>
+
+-------------
+
+```{r, echo=FALSE}
+
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv") 
+
+```
+
+
+# De dataset
+
+De dataset `enquete` bevat gegevens van `r dim(enquete)[2]` variabelen geobserveerd bij `r dim(enquete)[1]` Amerikaanse studenten die een vak statistiek volgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `enquete` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(enquete) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(enquete)[2]` variabelen zijn met telkens `r dim(enquete)[1]` observaties. 
+
+<br>
+
+Variabelen die je interesseren kan je hier eventueel al in een apart object opslaan.
+
+```{r}
+
+geslacht <- enquete$Sex
+tv <- enquete$TV
+
+```
+
+`geslacht` bevat het geslacht van de respondenten. Dat is een categorische variabele. `tv` geeft weer hoeveel uur de respondent gemiddeld naar tv kijkt per week en is hier de continue variabele.
+
+<br>
+
+------------------
+
+# Opgesplitste data
+
+In R kan je eenvoudig de mediaan (of een andere centrummaat) opvragen van een variabele, opgedeeld volgens de verschillende niveaus van een andere, categorische variabele. Hieronder bijvoorbeeld vraag je de mediaan (`FUN=median` staat voor de functie die je wil toepassen) van de variabele `tv` opgedeeld volgens `geslacht`. 
+
+```{r}
+aggregate(tv ~ geslacht, FUN=median)
+```
+
+<br>
+
+Met spreidingsmaten werkt het op dezelfde manier.
+
+```{r}
+aggregate(tv ~ geslacht, FUN=sd)
+```
+
+<br>
+
+Het hoeft niet alleen om centrummaten of spreidingsmaten te gaan. Je kan bij het argument `FUN=` gelijk welke functie invoeren die op `tv` kan worden toegepast. Probeer eens met `max()` of `length()`.
+
+<br>
+
+------------------
+
+# Meerdere boxplots
+
+Een belangrijk onderdeel van het verkennen van data bestaat erin om een visuele voorstelling te maken van de data. Hier tonen we hoe je dat kan doen in het R-basispakket<a href="#footnote1"><sup>1</sup></a>.
+
+Het is heel eenvoudig om meerdere boxplots naast elkaar te plaatsen. Met de code hieronder teken je een boxplot voor elk niveau van de variabele geslacht. 
+
+Net zoals bij andere figuren kan je een titel toevoegen aan de figuur en aan de assen.
+
+```{r}
+
+boxplot(tv ~ geslacht,
+        main="Boxplots van tv opgedeeld volgens geslacht",
+        xlab="Geslacht",
+        ylab="Gemiddeld aantal uur tv per week")
+
+```
+
+<br>
+
+De plot blijft beschikbaar voor toevoegingen -zoals een legende, lijnen, vlakken of tekst- nadat de functie `boxplot()` is uitgevoerd. Dit kan bijvoorbeeld met de functies `abline()`, `polygon()` of `text()`. De plot blijft beschikbaar zolang je geen andere code uitvoert die niets met de plot zelf te maken heeft.
+
+<br>
+
+
+----------------------
+
+# Voetnoten
+
+<ol>
+<li>
+<p id='footnote1'> Er bestaan ook R-packages die speciaal ontworpen zijn voor datavisualisatie. Het meest gebruikte heet 'ggplot2'.</p>
+
+</ol>
+
+<br>

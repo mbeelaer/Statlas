@@ -1,0 +1,1204 @@
+---
+title: "Binaire logistische regressie"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    css: statlas_logreg.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+options(width=120)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(fmsb) # Nagelkerke
+library(pROC) # AUC
+library(effects)
+library(generalhoslem) # Hosmer-Lemeshow test
+```
+
+```{r, echo=FALSE, include=FALSE}
+setwd('C:/Users/mbeelaer/OneDrive - UGent/FPPW. Statlas/Logistische regressie')
+
+barrieres <- try(read.csv('https://statlas.ugent.be/datasets/barrieres.csv'))
+if("try-error" %in% class(barrieres)) barrieres <- read.csv('barrieres.csv')
+
+```
+
+\
+
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target="_blank">handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+Het voorbeeld op deze pagina is afkomstig van een <a href='#Referentie'>studie van Van Nieuwenhove & De Wever (2023)</a>. Er zijn kleine wijzigingen aangebracht om didactische redenen. De studie is ook uitgebreider dan wat hier wordt gedemonstreerd.
+
+\
+
+
+------------------
+
+# Doel
+
+Logistische regressie is een statistische techniek die toelaat om een categorische uitkomstvariabele te modelleren in functie van een reeks predictoren. Dat wordt gedemonstreerd op deze pagina. De predictoren kunnen zowel continu als categorisch zijn. 
+
+Ook interacties tussen predictoren zijn mogelijk. Dat komt aan bod in een andere demonstratie op Statlas.
+
+<i>Binaire</i> logistische regressie verwijst naar de specifieke situatie waarin de categorische uitkomstvariabele exact twee waarden ("niveaus") kan aannemen. Er bestaat ook multinomiale logistische regressie, waarbij de uitkomst meer dan twee waarden kan aannemen. 
+
+Logistische regressie maakt deel uit van een familie van statistische technieken die gezamenlijk het "Veralgemeend Lineair Model" worden genoemd. (in het Engels: "Generalized Linear Model")
+
+\
+
+
+## Het onderzoek van Van Nieuwenhove & De Wever (2023) {-}
+
+In deze demonstratie belichten we een deel van de studie van Van Nieuwenhove & De Wever (2023). Zij proberen te verklaren waarom mensen wel of niet deelnemen aan opleidingen in het volwassenenonderwijs. Hun onderzoek is in belangrijke mate gebaseerd op een courante theorie in de gedragswetenschappen: de theorie van gepland gedrag (afgekort TGG; in het Engels: "theory of planned behavior"). Kort samengevat stelt deze theorie dat gedrag een gevolg is van de intentie om dat gedrag te stellen, waarbij die intentie op zijn beurt het gevolg is van drie grote groepen van oorzaken:
+
+<ol>
+<li> Perceptie van controle over gedrag (in het Engels: "Perceived behavioral control")
+<li> Perceptie van sociale normen (in het Engels: "Perceived social norms")
+<li> Attitudes
+</ol>
+
+\
+
+Een van de onderzoeksvragen die Van Nieuwenhove & De Wever (2023) zich stelden was of de intentie om wel of niet een opleiding te volgen in het volwassenenonderwijs kan worden verklaard met behulp van deze drie variabelen^[Elk van deze drie variabelen is berekend door meerdere items uit een enquête te combineren.]. Het is duidelijk dat de intentie om wel of niet deel te nemen aan een opleiding een categorische afhankelijke variabele is met twee niveaus. De bedoeling is om die te modelleren in functie van een aantal predictoren, meer bepaald de drie grote variabelen uit de TGG. Om die onderzoeksvraag met die variabelen te bestuderen gebruikten de onderzoekers binaire logistische regressie. Hoe dat werkt tonen we in de demonstratie hieronder.
+
+\
+
+Van Nieuwenhove & De Wever (2023) bouwen daarna voort op de TGG met als doel om tekortkomingen in de bestaande wetenschappelijke literatuur over volwassenenonderwijs te remediëren. Dat doen zij door interactie-effecten te toetsen. Een demonstratie van die analyse vind je terug op een andere pagina op Statlas.
+
+\
+
+Van Nieuwenhove & De Wever (2023) gaan in hun studie nog een stap verder en onderzoeken ook de rol van psychosociale barrières bij de intentie om een opleiding te volgen. Dat is het belangrijkste doel van hun artikel (dat kan je al afleiden uit de titel). Dergelijke barrières zijn onderbelicht in de wetenschappelijke literatuur en dus de moeite waard om te onderzoeken. Specifiek vermoeden ze dat eerdere ervaringen met onderwijs een psychosociale barrière zouden kunnen vormen om als volwassene opnieuw een opleiding te volgen. Voor dit alles gebruiken zij een model met mediatie. 
+
+\
+
+
+---------------------
+
+# Het model 
+
+Het doel van de demonstratie op deze pagina is om na te gaan of de intentie om een opleiding te volgen (`intentie`) kan worden verklaard door de drie variabelen van de TGG, namelijk perceptie van controle over gedrag (`pcg`), perceptie van sociale normen (`psn`) en attitudes (`attitudes`). Dit is een eenvoudig logistisch regressiemodel.
+
+In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
+
+\
+
+<img id="myBtn" class="modalBtn" src="modeldiagram1.PNG" width="200px">
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+<!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src="modeldiagram1.PNG" alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+De regressievergelijking ziet er zo uit:
+
+$$log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 \: pcg+ \beta_2 \: psn+ \beta_3 \: attitudes$$
+
+\
+
+$\pi$ staat daarbij voor de kans op de intentie om een opleiding te volgen. $\frac{\pi}{1-\pi}$ is de odds op de intentie om een opleiding te volgen. De logaritme van de odds wordt ook de logit genoemd.
+
+Voor een uitgebreidere uitleg over logaritmes, odds en oddsratio's, kan je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=229' target='_blank'>in deze syllabus</a> terecht.
+
+\
+
+
+------------------
+
+# Dataset & packages
+
+De data die voor de demonstratie worden gebruikt zijn online beschikbaar. Gebruik de volgende code om de data in te laden in RStudio.
+
+```{r, eval=FALSE}
+barrieres <- read.csv('https://statlas.ugent.be/datasets/barrieres.csv')
+```
+
+\
+
+De dataset `barrieres` bevat de gegevens van `r dim(barrieres)[1]` respondenten die een vragenlijst invulden. Dat resulteerde in `r dim(barrieres)[2]` variabelen. 
+
+\
+
+Relevante variabelen voor deze demonstratie zijn:
+
+<ul><li>`intentie` "Ik ben van plan om tijdens de volgende 12 maand deel te nemen aan een vorm van levenslang leren." De antwoordopties "nee" en "ja" werden gecodeerd als 0 en 1.
+<li>`pcg` Perceptie van controle over het eigen gedrag
+<li>`psn` Perceptie van sociale normen
+<li>`attitudes` Attitudes tegenover het gedrag
+</ul>
+
+\
+
+Om een logistisch regressiemodel te fitten heb je genoeg aan base R. Er zijn geen packages nodig. Om enkele specifieke zaken te bekomen zullen we gebruik maken van deze packages: `fmsb`, `effects`, `pROC` en `generalhoslem`. Je kan die eventueel al installeren. Verderop zullen we uitdrukkelijk vermelden wanneer we die packages gebruiken.
+
+```{r, eval=FALSE}
+install.packages(c("fmsb", "effects", "pROC", "generalhoslem")) # vergeet niet dat R hoofdlettergevoelig is, dus "pROC" is niet hetzelfde als "proc"
+```
+
+\
+
+------------------
+
+# Visuele exploratie
+
+Je kan meteen een eerste indicatie krijgen van het antwoord op de onderzoeksvraag door de associatie te bekijken tussen de uitkomstvariabele `intentie` en telkens een andere predictor. In de code hieronder vertel je aan R dat je boxplots wil van de predictor `pcg`, opgesplitst volgens de `intentie`. Het argument `horizontal=TRUE` doet de horizontale en de verticale as van plaats wisselen. Dat is niet echt nodig, maar het zorgt ervoor dat de predictor op de horizontale as komt en de uitkomst op de verticale as, zoals je waarschijnlijk gewoon bent.
+
+```{r}
+boxplot(pcg ~ intentie, data=barrieres, horizontal=TRUE)
+```
+
+Wat leert deze grafiek je? Bij hele lage waarden voor `pcg` zie je enkel maar `intentie=0`. Wanneer je geleidelijk naar rechts opschuift, dan kom je eerst voornamelijk gevallen tegen waar `intentie=0`. Pas aan de rechterkant, verschijnen de meeste gevallen waar `intentie=1`. Hogere waarden voor `pcg` lijken dus min of meer geassocieerd met "hogere waarden" voor `intentie` (dat wil zeggen `1` in plaats van `0`). Op het eerste zicht zou er dus sprake kunnen zijn van een associatie tussen deze predictor en de uitkomst. 
+
+\
+
+Op dezelfde manier kan je even goed `psn` en `attitudes` plotten tegenover `intentie`. 
+
+```{r}
+boxplot(psn ~ intentie, data=barrieres, horizontal=TRUE)
+boxplot(attitudes ~ intentie, data=barrieres, horizontal=TRUE)
+```
+
+
+Deze visuele exploratie is natuurlijk maar een hele ruwe analyse. Die moet verfijnd worden door formele toetsen uit te voeren. Dat komt verderop aan bod.
+
+\
+
+------------------
+
+# Modelspecificatie in R
+
+Je kan het model specifiëren in R door de uitkomstvariabele `intentie` te laten volgen door een tilde `~`, met daarna de verschillende predictoren gescheiden door een plusteken `+`. Dit is identiek dezelfde werkwijze als bij lineaire regressiemodellen.
+
+De formule met de modelspecificatie sla je op als een string genaamd `formule1`.
+
+```{r}
+formule1 <- "intentie ~ pcg + psn + attitudes"
+```
+
+\
+
+Die string geef je vervolgens aan de functie `glm`. Je vertelt erbij uit welk dataframe de gegevens moeten komen (argument `data`) en welk soort analyse je wil uitvoeren (argument `family`). Dat laatste is nodig omdat `glm` ook andere soorten analyses dan logistische regressie aankan. Je kiest voor `link="logit"` omdat je een logaritme van de odds wil modelleren.^[In sommige vakgebieden, zoals de psychometrie, geven onderzoekers vaak de voorkeur aan `link="probit"`. Dat heeft voordelen in bepaalde gevallen maar hier gaan we daar niet dieper op in.]
+
+```{r}
+model1 <- glm(formula=formule1, data=barrieres, family=binomial(link="logit"))
+```
+
+\
+
+De opsplitsing van de modelspecificatie in twee stappen doen we louter om de code leesbaarder te maken.
+
+\
+
+----------------------
+
+# De output opvragen
+
+Wanneer je het object `model1` geeft aan de functie `summary()` krijg je uitgebreide informatie terug.
+
+```{r}
+summary(model1)
+```
+
+\
+
+Wat leer je hier nu uit? Je kan de parameterschattingen interpreteren en je ziet voor elke predictor een significantietoets. Vooraleer je in die informatie duikt is het verstandig om eerst het model in zijn geheel te beoordelen. 
+
+\
+
+----------------------
+
+# Het model beoordelen {#model.geheel}
+
+Wat is de verklarende kracht van het model met deze drie predictoren? Er zijn enkele manieren om dit te beoordelen.
+
+\
+
+## Nagelkerke's $R^2$ {-}
+
+Een eerste mogelijkheid is om Nagelkerke's $R^2$ te berekenen. Voor een logistisch regressiemodel kan je dit berekenen met het package `fmsb`. Je zal het eerst (eenmalig) moeten installeren en vervolgens laden in R.
+
+```{r, eval=FALSE}
+install.packages("fmsb") # eenmalig
+library(fmsb) # in elke R-sessie
+```
+
+\
+
+Nu zijn de functies uit het package beschikbaar en kan je Nagelkerke's $R^2$ berekenen. Je geeft het object `model1` aan de functie `NagelkerkeR2`. 
+
+```{r, include=FALSE}
+Nagelkerke <- NagelkerkeR2(model1)[[2]]
+```
+
+```{r}
+NagelkerkeR2(model1)
+```
+
+\
+
+Het eerste deel van de output `$N` geeft gewoon de steekproefgrootte.
+
+Nagelkerke's $R^2$ is ongeveer gelijk aan `r round(Nagelkerke, 2)`. Net zoals de determinatiecoëfficiënt $R^2$ in lineaire regressiemodellen geeft het een idee van de model fit. Het is ook een getal tussen 0 en 1. Maar in tegenstelling tot $R^2$ mag je Nagelkerke's $R^2$ <u>niet</u> interpreteren als de proportie verklaarde variantie van de uitkomstvariabele. Het is een zogenaamde pseudo-$R^2$ maat. De interpretatie is niet altijd eenduidig. Soms zal je een "verrassend" lage waarde krijgen voor Nagelkerke's $R^2$ ondanks een op het eerste zicht goede fit. Hierdoor is het af te raden om deze maat te gebruiken, zeker als dit de enige manier is die je gebruikt om het model te beoordelen. 
+
+\
+
+
+## Modelvergelijking met het nulmodel {.unnumbered #modelvgl.nul}
+
+Door het model met drie predictoren te vergelijken met het nulmodel krijg je een globale beoordeling van het model. Een modelvergelijking is een toets, dus begin met uitdrukkelijk de nulhypothese en alternatieve hypothese te formuleren. 
+
+<ul>
+<li> De nulhypothese stelt dat geen enkele predictor een effect heeft op de logit van `intentie`.
+<li> De alternatieve hypothese stelt dat minstens één predictor een effect heeft.
+</ul>
+
+\
+
+Deze modelvergelijking doe je door zowel `model1` als het nulmodel aan de functie `anova()` te geven. Eerst bouwen we het nulmodel.
+
+```{r}
+formule0 <- "intentie ~ 1"
+model0 <- glm(formula=formule0, data=barrieres, family=binomial(link="logit"))
+```
+
+Met deze code is op zich niets mis, maar toch zal je hiermee geen modelvergelijking kunnen uitvoeren met de functie `anova()`. Je zal volgende foutmelding krijgen.
+
+```{r, error=TRUE, warning=FALSE}
+anova(model0, model1, test="LRT")
+```
+
+\
+
+Het probleem is dat het nulmodel en `model1` niet geschat zijn op basis van een even grote dataset. Hoe komt dat? 
+
+Het nulmodel maakt enkel gebruik van de kolom `intentie`. Bij het schatten van dit model zal R geen rekening houden met de eventuele rijen/observaties waarbij de waarde voor `intentie` ontbreekt. Deze rijen zullen worden geschrapt uit de data.
+
+`model1` maakt gebruik van vier kolommen: `pcg`, `psn`, `attitudes` en `intentie`. Bij het schatten van dit model zal R geen rekening houden met de eventuele rijen waarbij de waarde voor `intentie` ontbreekt <i>of</i> waarbij de waarde voor `pcg` ontbreekt  <i>of</i> waarbij de waarde voor `psn` ontbreekt  <i>of</i> waarbij de waarde voor `attitudes` ontbreekt. Al deze rijen worden geschrapt en dat zijn er natuurlijk meer dan bij het nulmodel. 
+
+```{r, echo=FALSE}
+psn.na <- which(is.na(barrieres$psn))[3:5]
+missings <- paste0(psn.na[1], ", ", psn.na[2], " en ", psn.na[3])
+```
+
+\
+
+Hieronder zie je een deel van de dataset om dit te illustreren. R zal al deze rijen gebruiken om het nulmodel te schatten. Er is immers overal een waarde voor `intentie`. Om `model1` te schatten zal R de rijen `r missings` schrappen want daar is geen waarde voor `psn`.
+
+```{r, echo=FALSE}
+print(barrieres[psn.na[1]:psn.na[3],], row.names = FALSE)
+```
+
+\
+
+Om de modelvergelijking te kunnen uitvoeren heb je een nulmodel nodig dat gebaseerd is op dezelfde rijen/observaties als `model1`. Er zijn verschillende manieren om dat te doen. De makkelijkste werkwijze is waarschijnlijk om eerst `model1` te schatten (wat we eerder op deze pagina al hebben gedaan). Het object `model1` bevat een onderdeel `model1$model`. Als je dit opvraagt, zie je de data die hiervoor werden gebruikt.
+
+```{r}
+model1$model
+```
+
+\
+
+Nu kan je die data aan `glm()` geven in plaats van de hele dataset `barrieres`.
+
+```{r}
+model0 <- glm(formula=formule0, data=model1$model, family=binomial(link="logit")) # vergeet niet om het object "formule0" te maken als je dat nog niet hebt gedaan
+```
+
+\
+
+`anova()` zal nu de modelvergelijking kunnen uitvoeren zonder foutmeldingen.
+
+```{r}
+anova(model0, model1, test="LRT")
+```
+
+\
+
+Je ziet een p-waarde voor de $\chi^2$-toets die kleiner is dan 0.05, dus je kan de nulhypothese verwerpen op het 5% significantieniveau. Het toevoegen van de drie predictoren leidt tot een significante verbetering van het model. Kortom, de drie predictoren dragen wel degelijk bij tot een beter begrip van `intentie`.
+
+\
+
+
+## Area Under the Curve (AUC) {.unnumbered #auc.orig}
+
+Nog een optie om het model te beoordelen is het berekenen van de "Area Under the Curve" (AUC). Dit komt niet voor in de opleidingen van de FPPW. <a href="#auc">Onderaan deze pagina vind je een gedetailleerde uitleg.</a>
+
+\
+
+
+## Hosmer-Lemeshow toets {-}
+
+Het is ook mogelijk om een formele "goodness-of-fit test" uit te voeren, met name de Hosmer-Lemeshow toets. Ook dit komt niet voor als leerstof in de opleidingen van de FPPW. <a href="#hosmer-lemeshow">Onderaan deze pagina vind je een gedetailleerde uitleg.</a>
+
+\
+
+
+## Antwoord op de onderzoeksvraag {-}
+
+Herinner je wat de onderzoeksvraag van Van Nieuwenhove & De Wever (2023) was: kan de intentie om wel of niet een opleiding te volgen in het volwassenenonderwijs worden verklaard met behulp van de drie variabelen van de theorie van gepland gedrag?
+
+Die vraag kan je beantwoorden door de verklarende kracht van het model in zijn geheel te beoordelen, zoals we net hebben gedaan. De verschillende methoden om het model te beoordelen zijn dus ook methoden om een antwoord te formuleren op de onderzoeksvraag.
+
+\
+
+
+----------------------
+
+# Parameterschattingen interpreteren
+
+In de output van `summary(model1)` vind je een kolom `Estimate`. Daarin staan parameterschattingen. 
+
+In logistische regressie zijn het niet de waarden van de uitkomstvariabele zelf die gemodelleerd worden in functie van predictoren, maar wel de logaritmes van de odds. In dit voorbeeld gaat het om de odds op het hebben van de intentie om een opleiding te volgen. Voor een uitgebreidere uitleg over logaritmes, odds en oddsratio's, kan je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=229' target='_blank'>in deze syllabus</a> terecht.
+
+In de kolom `Estimate` vind je bij elke predictor een schatting. De interpretatie van deze waarden is niet zo eenvoudig. Deze kolom met parameterschattingen kan je omrekenen naar odds en oddsratio's. De kolom maakt deel uit van het object `model1` en kan je afzonderlijk selecteren met `model1$coef`. Vervolgens geef je die aan de functie `exp()`. R berekent dan $e^{b_0}$, $e^{b_1}$ enzovoort. Soms wordt dit ook geschreven als $exp(b_0)$, $exp(b_1)$, enzovoort.
+
+```{r}
+exp(model1$coef)
+```
+
+\
+
+De odds en oddsratio's die je nu bekomt zijn makkelijker te interpreteren.
+
+Onder `(Intercept)` vind je de geschatte odds voor iemand met waarde 0 voor alle predictoren.
+
+```{r, echo=FALSE}
+pcg.coef <- round(exp(model1$coef["pcg"]), 2)
+```
+
+
+Onder de namen van de predictoren kan je telkens de geschatte oddsratio voor die predictor aflezen. Voor `pcg` bijvoorbeeld is die ongeveer gelijk aan `r pcg.coef`. Voor elke toename van de predictor `pcg` met 1 eenheid schatten we dus dat de odds op de intentie om een opleiding te volgen vermenigvuldigd worden met factor `r pcg.coef` (bij gelijke waarden van de andere predictoren). Deze geschatte factor is groter dan 1, dus de odds nemen toe naarmate de waarde voor `pcg` toeneemt. Er is met andere woorden een positief verband. 
+
+De andere parameterschattingen kan je natuurlijk analoog interpreteren. Voor meer uitleg bij de interpretatie van de parameterschattingen, zie opnieuw <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=223' target='_blank'>deze syllabus</a>, vooral op pagina 234 en 235.
+
+\
+
+## Een categorische predictor {.unnumbered #categorical}
+
+Alle predictoren tot hiertoe waren continue variabelen. Binaire logistische regressie kan echter even goed met categorische predictoren. Louter om dit te kunnen illustreren bouwen we hier een nieuw model. Het enige verschil met `model1` is de extra predictor `opl.niveau`. Dat is een categorische variabele met 3 niveaus: `1`, `2` en `3`, wat staat voor "laagopgeleid", "middenopgeleid" en "hoogopgeleid". 
+
+Erg belangrijk hier is dat deze kolom in het data frame `barrieres` zeker van het type `factor` moet zijn. Anders bestaat het gevaar dat R de niveaus `1`, `2`, en `3` gaat interpreteren als echte getallen, wat fout zou zijn.
+
+```{r}
+barrieres$opl.niveau <- factor(barrieres$opl.niveau)
+```
+
+\
+
+Nu kan je het model specifiëren en de output opvragen. Dat gebeurt op dezelfde manier als voorheen.
+
+```{r}
+formule.extra <- "intentie ~ pcg + psn + attitudes + opl.niveau"
+model.extra <- glm(formula=formule.extra, data=barrieres, family=binomial(link="logit"))
+summary(model.extra)
+```
+
+\
+
+In de output zie je twee dummyvariabelen `opl.niveau2` en `opl.niveau3`. Deze dummies vertegenwoordigen de niveaus `2` en `3` van `opl.niveau`, wat betekent dat niveau `1` het referentieniveau is. Je kan dit ook zien met de functie `contrasts()`.
+
+```{r}
+contrasts(barrieres$opl.niveau)
+```
+
+\
+
+Wat betekenen de schattingen bij de dummyvariabelen? Net als eerder is het voor de interpretatie makkelijker om de schattingen op de odds-schaal te interpreteren. 
+
+```{r}
+exp(model.extra$coef)
+```
+
+```{r, echo=FALSE}
+or.opl2 <- round(exp(model.extra$coef)["opl.niveau2"], 2)
+```
+
+
+Hieruit lezen we af dat de schatting bij `opl.niveau2` ongeveer gelijk is aan `r or.opl2`. Dit is een oddsratio. De geschatte odds op `intentie` is een factor `r or.opl2` groter voor iemand die "middenopgeleid" is in vergelijking met iemand die "laagopgeleid" (= het referentieniveau) is, gegeven dat de waarden voor alle andere predictoren gelijk blijven. 
+
+\
+
+<a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=223' target='_blank'>In deze syllabus</a> vind je vanaf p.242 een extra voorbeeld van de interpretatie van parameterschattingen bij een categorische predictor.
+
+\
+
+Het `model.extra` diende enkel ter illustratie van een logistisch regressiemodel met een categorische predictor. In wat volgt keren we terug naar `model1`, dus zonder de predictor `opl.niveau`.
+
+\
+
+------------------
+
+# Effecten visualiseren 
+
+Verschillende functies uit het package `effects` laten je toe om heel eenvoudig plots te creëren van de effecten in een logistisch regressiemodel. 
+
+```{r, eval=FALSE}
+install.packages("effects") # package eenmalig installeren
+library(effects) # package laden
+```
+
+\
+
+Om meteen plots van alle effecten in het model te bouwen gebruik je de functie `predictorEffects()`. Je hoeft enkel het object `model1` aan die functie te geven. Het resultaat geef je aan de functie `plot()`. Het resultaat is een plot voor elke predictor in het model.
+
+```{r, fig.height=8}
+effects.model1 <- predictorEffects(model1)
+plot(effects.model1)
+```
+
+Op de horizontale as van elke plot verschijnen de verschillende waarden die de predictor kan aannemen. De verticale as toont de kans (dus niet de log(odds) of de odds!) op `intentie` voor elke waarde van de predictor.  Kansen aflezen op de verticale as is niet noodzakelijk interessant. De plot toont immers de lineaire relatie tussen de predictor en de uitkomst `intentie` <i>voor specifieke vaste waarden van de overige predictoren</i>. Voor andere waarden van de overige predictoren zal de rechte hoger of lager liggen. Het interessante aan een dergelijke plot is de helling van de rechte. Die vertelt je iets over de relatie tussen de predictor en de uitkomst.
+
+Om de plots correct te lezen moet je wel letten op de assen. De verschillende plots gebruiken een verschillende verticale as. Bovendien is de verticale as herschaald. De streepjes bij 0.1 en 0.2 liggen niet even ver uit elkaar als de streepjes tussen 0.2 en 0.3, enzovoort. Dat komt omdat in een logistisch regressiemodel de kans geen lineaire functie is van de predictoren.
+
+\
+
+Je kan ook plots maken voor afzonderlijke predictoren. Daarvoor gebruik je de functie `Effect`, waarbij je de naam van de predictor meegeeft samen met het object `model1`.
+
+```{r, fig.height=4, fig.width=4}
+effect.pcg <- Effect("pcg", model1)
+plot(effect.pcg)
+```
+
+Bij deze laatste plot gelden natuurlijk dezelfde opmerkingen over de verticale as die we zonet al hebben uiteengezet.
+
+\
+
+
+----------------------
+
+# Toetsen
+
+## Toets voor een parameter {-}
+
+Om het effect van een predictor in een logistische regressiemodel te toetsen zijn er twee veelgebruikte methoden: de Wald-toets en de Likelihood Ratio Toets (LRT). Beide toetsen zijn niet equivalent. De voorkeur gaat uit naar de LRT, maar voor grote steekproeven is er weinig verschil. 
+
+\
+
+### Wald toets {-}
+
+We kijken opnieuw naar de output van `summary(model1)`.
+
+```{css, echo=FALSE}
+.shorter {
+  max-height: 20vh;
+}
+```
+
+
+```{r, class.output=c(".chunk-output", ".shorter")}
+summary(model1)
+```
+
+\
+
+Je ziet in de output van `summary(model1)` een Wald-toets op elke rij. De toets bij het `(Intercept)` is inhoudelijk niet echt interessant. De toetsen bij de predictoren daarentegen zijn dat wel. De nulhypothese bij die toetsen houdt telkens in dat de parameter gelijk is aan 0 in de populatie, $\beta_1 = 0$. Als dat klopt, dan zal de log(odds) op `intentie` gemiddeld gezien gelijk blijven bij elke toename met 1 eenheid van de predictor. 
+
+Omdat $\beta_1$ niet zo makkelijk te interpreteren is, veranderen we de formulering van deze toets best in termen van $exp(\beta_1)$. De nulhypothese $\beta_1 = 0$ wordt dan $exp(\beta_1)=1$. Beide zijn perfect equivalent want $exp(0) = 1$. Het voordeel van de nieuwe formulering is dat $exp(\beta_1)$ een oddsratio is, wat makkelijker is voor de interpretatie. 
+
+Als de nulhypothese $exp(\beta_1)=1$ waar is, dan blijven de odds op `intentie` gelijk bij elke toename met 1 eenheid van de predictor `pcg`, gegeven dat de waarden voor de andere predictoren gelijk blijven.
+
+Als daarentegen $exp(\beta_1)\neq1$, dan veranderen de odds op `intentie` wel bij elke toename met 1 eenheid van `pcg`. 
+
+In dit geval zien we in de output bij `pcg` een p-waarde van `r coef(summary(model1))[2,4]`. Dat is kleiner dan 0.05, dus we verwerpen de nulhypothese op het 5%-significantieniveau.
+
+\
+
+
+### Likelihood Ratio Toets (LRT) {-}
+
+De LRT voer je uit door twee geneste modellen te construeren. Het ene model (hier `model1`) bevat alle predictoren, het andere bevat dezelfde predictoren behalve de ene die je wil toetsen. Vervolgens voer je een modelvergelijking uit door beide modellen aan de functie `anova()` te geven.
+
+Stel dat je het effect van `pcg` wil toetsen, dan bouw je eerst een model zonder die predictor. Om modellen te kunnen vergelijken met `anova()` is het belangrijk dat ze gefit zijn op basis van dezelfde data. Daar kan je voor zorgen door de data van het complexere model te hergebruiken met `model1$model`, net zoals <a href="#modelvgl.nul">toen je `model1` wilde vergelijken met het nulmodel</a>.
+
+```{r}
+formule.min.pcg <- "intentie ~ psn + attitudes"
+model.min.pcg <- glm(formula=formule.min.pcg, data=model1$model, family=binomial(link="logit"))
+```
+
+\
+
+De nulhypothese van de toets stelt dat beide modellen niet van elkaar verschillen. (Technisch gesproken: "de deviance is hetzelfde".) De alternatieve hypothese houdt in dat het meer uitgebreide model beter is dan het minder uitgebreide model. ("De deviance is lager".)
+
+```{r}
+anova(model.min.pcg, model1, test="LRT") # let op de volgorde waarin de modellen aan de functie worden gegeven
+```
+
+\
+
+De output geeft je een heel kleine p-waarde. Je kan de nulhypothese verwerpen op het 5% significantieniveau. Je concludeert dat het model met `pcg` beter is dan het model zonder `pcg`. 
+
+Merk trouwens op dat de p-waarde licht verschilt van die bij de Wald-toets. Beide toetsen zijn dus inderdaad niet equivalent (maar het maakt in dit geval niet uit voor de conclusie over de nulhypothese). 
+
+\
+
+
+## Toets voor meerdere predictoren {-}
+
+Soms zijn onderzoekers geïnteresseerd in het effect van een verzameling predictoren. Dit kan op een analoge manier getoetst worden, via een LRT waarbij je twee geneste modellen vergelijkt. Het eerste model bevat alle predictoren, het andere model bevat dezelfde predictoren behalve degene die je wil toetsen.
+
+Stel dat je het effect van `pcg` en `attitudes` wil toetsen, dan bouw je eerst een model zonder die predictoren. Opnieuw geldt dat de datasets van beide modellen die je wil vergelijken even groot moeten zijn. Dit kan door de "dataset" `model1$model` te gebruiken, net als bij de toets voor het volledige model en bij de toets voor één predictor.
+
+```{r}
+formule.min.pcg.attitudes <- "intentie ~ psn"
+model.min.pcg.attitudes <- glm(formula=formule.min.pcg.attitudes, data=model1$model, family=binomial(link="logit"))
+```
+
+\
+
+De nulhypothese van de toets stelt dat beide modellen niet van elkaar verschillen. (Technisch gesproken: de deviance is hetzelfde.) De alternatieve hypothese houdt in dat het meer uitgebreide model beter is dan het minder uitgebreide model. (De deviance is lager.)
+
+```{r}
+anova(model.min.pcg.attitudes, model1, test="LRT") # let op de volgorde waarin de modellen aan de functie worden gegeven
+```
+
+\
+
+De output geeft je een heel kleine p-waarde. Je kan de nulhypothese verwerpen op het 5% significantieniveau. Je concludeert dat het model met `pcg` en `attitudes` beter is dan het model zonder die twee predictoren. De verklarende kracht van het model is hoger ten gevolge van het toevoegen van de predictoren `pcg` en `attitudes`.
+
+\
+
+Deze manier van toetsen is trouwens ook bruikbaar om het effect van een categorische predictor met meer dan twee niveaus te toetsen. Een dergelijke predictor zal gecodeerd zijn door twee of meer dummyvariabelen. Je kan een modelvergelijking zoals degene hierboven gebruiken om een model met die dummyvariabelen te vergelijken met een model zonder die dummyvariabelen. We illustreren dit voor het extra model dat <a href="#categorical">eerder</a> al werd opgesteld. We voeren een toets uit voor de categorische predictor `opl.niveau`. 
+
+```{r}
+anova(model1, model.extra, test="LRT")
+```
+
+De output geeft je een heel kleine p-waarde. Je kan de nulhypothese verwerpen op het 5% significantieniveau.
+
+\
+
+
+## Toets voor het hele model {-}
+
+Ten slotte kan je ook het hele model vergelijken met het nulmodel via een LRT. Dat zijn we eerder al tegengekomen, bij de <a href="#modelvgl.nul">beoordeling van het hele model</a>. 
+
+\
+
+
+----------------------
+
+# Predicties {#predicts}
+
+Dankzij de schattingen die we hebben bekomen in de output van `summary(model1)` is het nu mogelijk om predicties te berekenen. Voor een persoon met bepaalde waarden voor de predictoren kan je berekenen wat de geschatte waarde is voor de uitkomstvariabele. 
+
+\
+
+
+## Log-schaal {-}
+
+In logistische regressie modelleren we niet `intentie` (de uitkomstvariabele) zelf in functie van de predictoren, maar wel de logaritme van de odds op `intentie`. Wanneer je waarden voor de predictoren in de regressievergelijking stopt, dan kom je natuurlijk waarden voor de logaritme van de odds uit, niet voor de uitkomstvariabele zelf. Voor meer uitleg kan je opnieuw terecht <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=229' target='_blank'>in deze syllabus</a>.
+
+Je kan de logaritme van de odds zelf berekenen door waarden voor de predictoren in te vullen in de regressievergelijking.
+
+$$log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 \: pcg+ \beta_2 \: psn+ \beta_3 \: attitudes$$
+
+\
+
+Je kan dit makkelijk opvragen in R voor alle observaties in je dataset ineens. Gebruik daarvoor de functie `predict()`.
+
+```{r, eval=FALSE}
+predict(model1)
+```
+
+```{r, echo=FALSE}
+predicties <- predict(model1)
+predicties
+```
+
+\
+
+Bijvoorbeeld, voor de 54e observatie in de dataset kan je aflezen dat $log\left(\frac{\pi}{1-\pi}\right) = `r predicties["54"]`$. Als je dat wil kan je altijd narekenen dat dit inderdaad de juiste geschatte log(odds) is voor een persoon met volgende waarden voor de predictoren:
+
+```{r, echo=FALSE}
+print(barrieres["54",c("attitudes", "pcg", "psn")], row.names=FALSE)
+```
+
+\
+
+```{r, echo=FALSE}
+coefs <- round(model1$coef, 5)
+```
+
+Inderdaad, 
+
+
+$$
+\begin{aligned}
+b_0 + b_1 \: pcg_{54}+ b_2 \: psn_{54} + b_3 \: attitudes_{54} &= `r coefs[1]` + `r coefs[2]` \times `r barrieres["54","pcg"]` + `r coefs[3]` \times `r barrieres["54","psn"]` + `r coefs[4]` \times `r barrieres["54","attitudes"]` \\
+&\approx `r predicties["54"]`
+\end{aligned}
+$$
+
+De log(odds) is niet zo interessant om te rapporteren. Je rekent predicties op de log(odds)-schaal best om naar odds of naar kansen. Hieronder tonen we hoe je dat kan doen.
+
+\
+
+## Odds-schaal {-}
+
+Predicties op de odds-schaal kan je bekomen door het getal $e$ te verheffen tot de macht $\beta_0 + \beta_1 \: pcg+ \beta_2 \: psn+ \beta_3 \: attitudes$.
+
+Opnieuw kan je dit laten berekenen voor alle observaties in je dataset. Het commando `predict(model1)` leverde log(odds) op. Om hieruit de odds te berekenen in R gebruik je de functie `exp()`. 
+
+```{r}
+log.odds <- predict(model1)
+exp(log.odds) 
+```
+
+\
+
+Als je dat wil kan je dit opnieuw zelf narekenen voor een bepaalde observatie, bijvoorbeeld nummer 54.
+
+```{r, echo=FALSE}
+odds <- exp(log.odds)
+```
+
+
+$$\frac{\pi}{1-\pi} = e^{`r log.odds["54"]`} \approx `r odds["54"]`$$
+
+\
+
+## Kansen {-}
+
+Als je eenmaal de odds hebt, dan is het ook mogelijk om de voorspelde kansen $\pi$ te berekenen. 
+
+$$
+\begin{aligned}
+odds &= \frac{\pi}{1-\pi} \\
+ & \Updownarrow \\
+\pi &= \frac{odds}{1+odds}
+\end{aligned}
+$$
+
+In R kan je op basis van die formule een object (hier `kansen`) maken dat voor elke observatie de voorspelde kans bevat.
+
+```{r}
+kansen <- odds/(1+odds)
+```
+
+\
+
+Je kan de kansen ook veel sneller bekomen via de functie `predict()`, door een extra argument mee te geven, of nog korter via de functie `fitted()`.
+
+```{r, eval=FALSE}
+kansen <- predict(model1, type="response")
+# of
+kansen <- fitted(model1)
+```
+
+\
+
+De 54e observatie scoorde vrij laag op de drie TGG-predictoren. Nu zie je in het object `kans` dat voor deze persoon de verwachte kans op `intentie` erg laag is. Eigenlijk kon je dit ook al aflezen aan de voorspelde odds en zelfs aan de log(odds). De lage voorspelde kans is niet zo verwonderlijk. Uit de parameterschattingen van het model wist je immers al dat er een positief verband is tussen elke predictor en `intentie`. Bij lage waarden van de predictoren zal de voorspelde kans dan ook eerder klein zijn.
+
+\
+
+
+------------------
+
+# Extra informatie
+
+In deze sectie vind je meer gedetailleerde uitleg bij twee technieken die nuttig zijn in de context van logistische regressie, maar die geen deel uitmaken van de leerstof in opleidingen van de FPPW. We verwezen hier al naar in <a href="#auc.orig">deze subsectie</a>.
+
+\
+
+## Area Under the Curve (AUC) {.unnumbered #auc}
+
+De AUC is een maat die de voorspellende kracht van een logistisch regressiemodel uitdrukt. Om deze maat te berekenen zal je het package `pROC` nodig hebben. 
+
+```{r, eval=FALSE}
+install.packages("pROC") # eenmalig
+library(pROC) # in elke R-sessie
+```
+
+\
+
+Logistische regressie probeert op basis van waarden voor predictoren om gevallen zo goed mogelijk te klasseren als "succes" of "mislukking"^[Deze termen hebben natuurlijk geen enkele normatieve betekenis. "Succes" betekent enkel dat een bepaalde gebeurtenis zich voordoet en "mislukking" dat die gebeurtenis zich niet voordoet. In deze demonstratie slaat die gebeurtenis op het hebben van de intentie om een opleiding te volgen.]. In deze demonstratie probeerde je te voorspellen of iemand de intentie heeft om een opleiding te volgen door informatie over `pcg`, `psn` en `attitudes` van die persoon te gebruiken. Als je model extreem goed is, dan is elke voorspelling van een succes ook in werkelijkheid een succes, en is elke voorspelling van een mislukking daadwerkelijk een mislukking. Het zou nuttig zijn om in een getal uit te drukken hoe goed de voorspellingen op basis van je model aansluiten bij de geobserveerde `intentie`. Alleen blijkt dat niet zo eenvoudig.
+
+Je model geeft immers niet vanzelf voorspellingen in de vorm van "succes" en "mislukking" waarmee je de geobserveerde `intentie` kan vergelijken. In plaats daarvan krijg je voor een bepaalde observatie een geschat logaritme van de odds, waaruit je vervolgens een geschatte odds en een geschatte kans kan berekenen. Een meer uitgebreide uitleg vind je wat hoger op deze pagina, onder <a href="#predicts">Predicties</a>. In R kan je de voorspelde kansen makkelijk laten berekenen met de functie `fitted()`.
+
+```{r}
+kansen <- fitted(model1)
+```
+
+\
+
+Eenmaal je de kansen hebt kan je overgaan naar een uitdrukkelijke voorspelling van "succes" of "mislukking" door een cutoff te kiezen, bv. 0.50. Als de kans voor een bepaalde persoon in de dataset kleiner of gelijk is aan 0.50, dan is je voorspelling dat die persoon niet de intentie heeft om een opleiding te volgen ("mislukking"). Als de kans groter is dan 0.50, dan voorspel je dat die persoon wel de intentie heeft ("succes").
+
+In R kan je die uitdrukkelijke voorspelling van "succes" of "mislukking" maken met onderstaande lijn code. In plaats van de woorden `succes` en `mislukking` te gebruiken, coderen we dit als een `1` en een `0`.
+
+```{r}
+# We creëren een vector genaamd "intentie.voorspeld". Daarin komt een waarde 1 voor bij elke observatie die voldoet aan de "test" en een waarde 0 bij elke observatie die niet voldoet aan de "test".
+intentie.voorspeld <- ifelse(test=kansen > 0.50, yes=1, no=0)
+```
+
+\
+
+Om de voorspelde kansen en intenties naast elkaar te zien kan je ze samen in een data frame stoppen. En inderdaad, in dat data frame zie je dat de voorspelde intentie gelijk is aan 1, overal waar de kans groter is dan 0.50.
+
+```{r}
+data.frame(kansen, intentie.voorspeld)
+```
+
+\
+
+Nog interessanter is om meteen ook de geobserveerde intentie (`intentie`) hierbij te zien, zodat we geval per geval kunnen nagaan of onze voorspelling van de intentie ook juist is. Daartoe voegen we `kans` en `intentie.voorspeld` toe aan het bestaande data frame `barrieres`. Let op! Dit zal enkel lukken als het aantal rijen van `barrieres`, `kansen` en `intentie.voorspeld` gelijk is. Het oorspronkelijke data frame `barrieres` zal je dus moeten inkorten. Er waren immers ontbrekende data, waardoor sommige observaties uit `barrieres` geen waarde hebben bij `kansen` en bij `intentie.voorspeld`. Het inkorten van het data frame kan je als volgt doen.
+
+```{r}
+barrieres <- barrieres[,c("pcg", "psn", "attitudes", "intentie")] # let op: we overschrijven hier de oorspronkelijke dataset. Wees daar steeds voorzichtig mee
+barrieres <- na.omit(barrieres)
+```
+
+\
+
+Nu kan je `barrieres`, `kans` en `intentie.voorspeld` samenvoegen tot één data frame zonder foutmeldingen te krijgen.
+
+```{r}
+barrieres <- data.frame(barrieres, kansen, intentie.voorspeld)
+head(barrieres) # toont de eerste zes rijen
+```
+
+\
+
+Deze eerste zes rijen bevatten meteen een voorbeeld van alle mogelijke situaties met betrekking tot voorspelde en geobserveerde intentie. 
+
+<ul>
+<li> Wanneer `intentie` en `intentie.voorspeld` allebei gelijk zijn aan 1, dan is de voorspelling correct positief ("true positive").
+<li> Wanneer `intentie` en `intentie.voorspeld` allebei gelijk zijn aan 0, dan is de voorspelling correct negatief ("true negative").
+<li> Wanneer `intentie = 0` en `intentie.voorspeld = 1`, dan hebben we een vals positieve voorspelling gemaakt ("false positive"). 
+<li> Wanneer `intentie = 1` en `intentie.voorspeld = 0`, dan hebben we een vals negatieve voorspelling gemaakt ("false negative").
+</ul>
+
+\
+
+Nu zou je denken dat je een simpele berekening kan uitvoeren met het aantal correcte en foute voorspellingen die je model maakt. Daarmee zou je dan het model kunnen beoordelen. Jammer genoeg ligt het niet zo eenvoudig. Het probleem is dat de cutoff van 0.50 eigenlijk een willekeurige keuze is. Er kunnen goede redenen zijn om voor bijvoorbeeld 0.20 of 0.80 te kiezen in plaats van 0.50.
+
+<ul>
+<li> Een lagere cutoff van 0.20 heeft als voordeel dat je minder risico loopt om een observatie te klasseren als "mislukking" terwijl het in werkelijkheid een "succes" is. Het nadeel van deze lage cutoff is het omgekeerde: het risico is groter dat je een observatie klasseert als "succes" terwijl het in werkelijkheid een "mislukking" is.
+<li> Een hogere cutoff van 0.80 heeft als voordeel dat je minder risico loopt om een observatie te klasseren als "succes" terwijl het in werkelijkheid een "mislukking" is. Het nadeel van deze hoge cutoff is het omgekeerde: het risico is groter dat je een observatie klasseert als "mislukking" terwijl het in werkelijkheid een "succes" is.
+</ul>
+
+\
+
+Afhankelijk van welk risico je beter kan tolereren kan je kiezen voor een ander cutoff percentage. Er is met andere woorden geen absoluut juiste of foute cutoff.^[Wel is het zo dat cutoffs van 0 of van 1 weinig zinvol zijn.] 
+
+Een gevolg daarvan is dat de vector `intentie.voorspeld` er helemaal anders kan uitzien als je kiest voor een andere cutoff. Het is dus niet mogelijk om `intentie.voorspeld` te gebruiken om een algemene beoordeling te maken van de voorspellende kracht van je model.
+
+Je bent voorlopig nog niet dichter gekomen bij een manier om de voorspellende kracht van het model te kwantificeren. Daarvoor heb je een perspectief nodig dat niet gebonden is aan één specifieke keuze voor een cutoff waarde. Dat kan je bekomen door de cutoff in hele kleine sprongen te laten variëren van 1 naar 0. 
+
+\
+
+Om de uitleg goed te kunnen volgen is het een goed idee om nu eerst de data te rangschikken volgens oplopende voorspelde kans. De functie `order()` geeft je eerst het rijnummer van de laagste kans, dan het rijnummer van de tweede laagste kans, dan het rijnummer van de derde laagste kans, enzovoort. Die rijnummers stop je in de vector `volgorde`. Vervolgens herordenen we het data frame in die `volgorde`. Je ziet dat het data frame inderdaad gerangschikt is volgens de kolom `kansen`. (De kolom `intentie.voorspeld` die gebaseerd was op een cutoff van `0.5` laten we achterwege.)
+
+### {.unnumbered #rangschik}
+
+```{r}
+volgorde <- order(barrieres$kansen)
+barrieres <- barrieres[volgorde,]
+barrieres <- subset(barrieres, select= -c(intentie.voorspeld)) # kolom intentie.voorspeld weglaten
+head(barrieres)
+```
+
+\
+
+Nu ben je klaar om de cutoff in kleine sprongen te laten variëren van 1 naar 0. 
+
+Wat gebeurt er bij een cutoff gelijk aan 1? Dan zal je pas voorspellen dat de intentie er is ("succes") als de voorspelde kans precies gelijk is aan 1. In alle andere gevallen is de voorspelling dat de intentie er niet is ("mislukking"). Het is niet zo verrassend dat je met zo'n hoge cutoff nooit een voorspelling "succes" zal maken. De voorspelde kans is namelijk nooit exact gelijk aan 1. Dat zie je aan de onderkant van het geordende data frame `barrieres`, waar de hoogste voorspelde kansen te vinden zijn.
+
+```{r}
+tail(barrieres) # toont de laatste zes rijen
+```
+
+Die extreem hoge cutoff heeft als voordeel dat je nooit een vals positieve voorspelling maakt. Het nadeel is dat je ook nooit een correct positieve voorspelling maakt. 
+
+\
+
+De proportie vals positieve en correct positieve voorspellingen kan je in een assenstelsel plaatsen. De horizontale as stelt de proportie vals positieve voorspellingen voor^[$\frac{Aantal \; vals \; positieve \; voorspellingen}{Aantal \; mislukkingen}$]. Op de verticale as lees je de proportie correct positieve voorspellingen af^[$\frac{Aantal \; correct \; positieve \; voorspellingen}{Aantal \; successen}$]. Bij een cutoff gelijk aan 1 kom je in het punt helemaal links onderaan terecht. 
+
+<img src="roc.start.png" height=600>
+
+\
+
+Als je nu de cutoff geleidelijk laat zakken, dan zal je van steeds meer gevallen (observaties) voorspellen dat het een "succes" zal zijn. Voor elk individueel geval kan dat ofwel terecht zijn (correct positief) ofwel verkeerd (vals positief). Op het moment dat je cutoff zakt onder `r barrieres[dim(barrieres)[1],"kansen"]` dan maak je een eerste positieve voorspelling. Dat kan je zien in de output van `tail(barrieres)`. Dat is een correct positieve voorspelling, want de geobserveerde `intentie` is gelijk aan `1`. 
+
+De proportie correct positieve voorspellingen is dus toegenomen, terwijl de proportie vals positieve voorspellingen nog steeds gelijk is aan 0. Op de grafiek hieronder (waarin we inzoomen op de linkeronderkant van de grafiek hierboven) zie je dat er daardoor een sprong naar boven wordt gemaakt. Er is zelfs meteen een dubbele sprong, want er zijn twee observaties met identiek dezelfde voorspelde kans. Van zodra de cutoff onder die kans duikt, wordt natuurlijk voor beide gevallen een positieve voorspelling gemaakt. Het blijkt in beide gevallen om een correct positieve voorspelling te gaan, dus we maken een dubbele sprong omhoog. 
+
+De curve die je nu stapsgewijs aan het maken bent heet een ROC-curve.
+
+<img src="roc.linksonder.png" height=600>
+
+\
+
+Wanneer je de cutoff verder laat zakken tot `r barrieres[dim(barrieres)[1]-2,"kansen"]` komt er nog een correct positieve voorspelling bij. Dat vertaalt zich in nog een sprong naar boven op de grafiek. 
+
+Bij een volgende verlaging van de cutoff tot `r barrieres[dim(barrieres)[1]-3,"kansen"]` maak je een bijkomende positieve voorspelling, maar deze keer is dat een vals positieve voorspelling (want de geobserveerde `intentie` is gelijk aan `0`). De proportie vals positieve voorspellingen is nu niet meer gelijk aan 0, maar iets hoger. Visueel vertaalt dat zich in een sprong naar rechts. 
+
+Dit proces van dalende cutoffs blijf je herhalen tot de cutoff gezakt is naar 0. Dan worden alleen nog positieve voorspellingen gemaakt. De proportie correct positieve voorspellingen is gelijk aan 1 en hetzelfde geldt voor de proportie vals positieve voorspellingen. Je bent terechtgekomen in het punt helemaal rechtsboven op de grafiek. De resulterende curve zie je hieronder. 
+
+<img src="roc.full.png">
+
+\
+
+Je hoeft die ROC-curve natuurlijk niet manueel en stapsgewijs op te bouwen. Met behulp van het package `pROC` kan je die makkelijk plotten. Dat gebeurt in twee stappen. Eerst gebruik je de functie `roc()`. Die heeft twee argumenten nodig: enerzijds de namen van de kolommen met de geobserveerde `intentie` en de berekende `kansen`, anderzijds het data frame waarin die kolommen te vinden zijn (`barrieres`). 
+
+```{r, message=FALSE, warning=FALSE}
+mijn.roc <- roc(formula = intentie ~ kansen, data = barrieres)
+```
+
+\
+
+In een tweede stap geef je het object `mijn.roc` aan de (basis)functie `plot()`.
+
+```{r}
+plot(mijn.roc)
+```
+
+\
+
+Dat is misschien allemaal heel boeiend, maar wat heeft dit nu te maken met de voorspellende kracht van het model? Gelijk welk model zal evolueren op de grafiek van linksonder naar rechtsboven wanneer de cutoff afneemt van 1 naar 0. Waarin onderscheiden goede modellen zich dan van slechte? De sleutel zit in het traject dat een model aflegt van linksonder naar rechtsboven.
+
+Een goed model is een model dat relatief hoge kansen voorspelt voor gevallen waar `intentie` gelijk is aan `1`. Een dergelijk model zal bij afnemende cutoffwaarden van 1 naar 0 eerst vooral <u>correct</u> positieve voorspellingen maken. Visueel betekent dit dat de curve eerst steil omhoog zal gaan. Tevens zal een goed model lagere kansen voorspellen voor gevallen waar `intentie` gelijk is aan `0`. De <u>vals</u> positieve voorspellingen (en de bijhorende sprongen naar rechts) zullen dus pas komen nadat de meeste correct positieve voorspellingen (en bijhorende sprongen omhoog) al gepasseerd zijn.
+
+Het traject van een goed model zal dus dicht tegen de linkerzijde en bovenzijde van de grafiek lopen.
+
+Een slecht model doet natuurlijk het omgekeerde. Dan worden juist relatief hoge kansen voorspeld bij gevallen waar de geobserveerde `intentie` gelijk is aan `0`. Bij afnemende cutoff zullen dan eerst vooral <u>vals</u> positieve voorspellingen worden gemaakt. Dat betekent dat de curve eerst horizontale sprongen maakt. Daarna volgen pas de correct positieve voorspellingen en de bijhorende sprongen naar boven.
+
+Het traject van een slecht model loopt bijgevolg dicht tegen de onderzijde en rechterzijde van de grafiek. 
+
+\
+
+Waar bevindt jouw model zich precies tussen die twee uitersten? Dat kan je beoordelen aan de hand van de oppervlakte onder de curve (vandaar de naam "Area Under the Curve"). 
+
+Om de uitleg te verduidelijken zie je hieronder dezelfde curve, waarbij de oppervlakte onder de curve groen is gekleurd en de oppervlakte erboven rood. Je kan nu berekenen hoe groot de groene oppervlakte onder de curve is ten opzichte van het totaal van de groene plus de rode oppervlakte. In een ideaal model neemt de groene oppervlakte de hele grafiek in. Dan is de AUC gelijk aan 1. Bij het slechtst denkbare model is de groene oppervlakte onbestaande. De AUC is dan gelijk aan 0. De verhouding van de groene oppervlakte ten opzichte van de totale oppervlakte in jouw model ligt ergens tussen 0 en 1. Hoe dichter bij 1, hoe beter.
+
+<img src="roc.filled.png">
+
+\
+
+Met de functie `auc()` uit het package `pROC` kan je de AUC berekenen. Daarvoor heb je enkel het object `mijn.roc` nodig dat je al eerder maakte.
+
+```{r}
+auc(mijn.roc)
+```
+
+```{r, echo=FALSE}
+mijn.auc <- auc(mijn.roc)
+```
+
+\
+
+### De AUC interpreteren {-}
+
+De vraag is nu of deze waarde voor de AUC hoog of laag is. Met andere woorden, is jouw model nu goed of niet? Jammer genoeg is er geen onderbouwde grenswaarde die goede modellen duidelijk scheidt van slechte modellen. Toch zijn er enkele zaken die het vermelden waard zijn en die als richtlijnen kunnen dienen bij de interpretatie van de AUC.
+
+<ul>
+<li>Als je gewoon zou gokken wat de geobserveerde `intentie` is, dan mag je verwachten om een AUC te bekomen van 0.50. De berekende AUC van `r round(mijn.auc, 4)` moet je dus interpreteren als een waarde op een spectrum van 0.50 tot 1 en niet op een spectrum van 0 tot 1. 
+<li>Sommige auteurs hebben wel vuistregels voorgesteld voor een grenswaarde tussen goede en slechte modellen. Hosmer, Lemeshow & Sturdivant (2013) beschouwen een AUC vanaf 0.70 als aanvaardbaar. De auteurs waarschuwen echter zelf dat dit niet als een magische grens mag worden beschouwd en dat de context relevant is. Als je doel bijvoorbeeld is om een test te ontwikkelen die een levensbedreigende ziekte kan detecteren, dan is 0.70 onaanvaardbaar laag.
+<li>De AUC is waarschijnlijk nog het meest nuttig wanneer je modellen gaat vergelijken. Dan focus je vooral op de vraag in welke mate de AUC toeneemt wanneer je bijvoorbeeld een predictor toevoegt aan je model.
+</ul>
+
+\
+
+
+## Hosmer-Lemeshow {.unnumbered #hosmer-lemeshow}
+
+Hoe kan je een "goodness-of-fit" toets uitvoeren voor een logistisch regressiemodel? Hosmer-Lemeshow is hiervoor de meest gebruikte toets. Die steunt op een vergelijking van geobserveerde en verwachte frequenties.
+
+Je kan daarvoor het package `generalhoslem` gebruiken.
+
+```{r, eval=FALSE}
+install.packages("generalhoslem") # eenmalig installeren
+library(generalhoslem) # bij de start van elke sessie laden
+```
+
+\
+
+De functies uit het package maken het uitvoeren van de toets makkelijk, maar omdat het ook belangrijk is om te begrijpen wat de toets inhoudt vind je hieronder eerst wat theoretische achtergrond. We gaan daar dieper op in onder meer omdat Hosmer-Lemeshow geen leerstof is in opleidingen aan de FPPW.
+
+In een eerste stap worden de gegevens opgedeeld in groepen, bijvoorbeeld tien. Je kan dan een tabel opstellen die er als volgt uit ziet.
+
+<table border="1">
+  <tr>
+    <th></th>
+    <th>Groep 1</th>
+    <th>Groep 2</th>
+    <th>Groep 3</th>
+    <th>Groep 4</th>
+    <th>Groep 5</th>
+    <th>Groep 6</th>
+    <th>Groep 7</th>
+    <th>Groep 8</th>
+    <th>Groep 9</th>
+    <th>Groep 10</th>
+  </tr>
+  <tr>
+    <td><b>Intentie</b></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Geen intentie</b></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+\
+
+Het is een $2 \times 10$ tabel. De twee rijen staan voor de twee mogelijke uitkomsten: intentie om een opleiding te volgen of niet (ook wel "succes" en "mislukking" genoemd). Er zijn tien kolommen omdat de data in dit voorbeeld zijn opgedeeld in tien groepen. Dat aantal is in principe vrij te kiezen, maar doorgaans werkt men met tien groepen.  
+
+De opdeling in groepen gebeurt door de gegevens te rangschikken volgens de voorspelde kans en vervolgens tien groepen van gelijke grootte te maken. 
+
+Nu kan je de twintig cellen van de bovenstaande tabel op twee manieren opvullen. 
+
+Je kan in elke cel van de tabel de geobserveerde frequentie voor die cel $f_{obs, ij}$ noteren.
+
+```{r, echo=FALSE}
+# onderstaande code licht aangepast van origineel: R Lab 3 uit Categorical Data Analysis
+NG = 10
+predict <- predict(model1, type="response")
+if(length(unique(predict)) < 10) {
+  stop("number of unique patterns < 10")
+}
+
+# group the predicted probabilities in 10 groups
+groups <- cut(predict,
+              breaks=quantile(x=predict,seq(0,1,1/NG)),
+              include.lowest=T )
+
+# sum of predicted probabilities by group
+egroups <- tapply(predict, groups, sum)
+
+# sum of observed 1/0 responses by group
+ogroups <- tapply(model1$y, groups, sum)
+
+# number of observations per group
+ngroups <- table(groups)
+
+# Hosmer Lemeshow statistic
+statistic <- sum( (ogroups - egroups)^2 /( egroups*(1-egroups/ngroups)) )
+
+# p-value
+pvalue <- 1-pchisq(statistic, df=(NG-2))
+# list(statistic=statistic, df=(NG-2), pvalue=pvalue) 
+```
+
+```{r, echo=FALSE}
+dimnames <- list(paste0("Groep ", 1:length(ogroups)), c("Intentie", "Geen intentie"))
+
+ogroups.complement <- ngroups - ogroups
+t(array(c(ogroups, ogroups.complement), dim=c(length(ogroups), 2), dimnames=dimnames))
+```
+
+\
+ 
+Anderzijds kan je de twintig cellen in de tabel ook opvullen met voorspelde frequenties voor elke cel $f_{exp, ij}$. Die zijn gebaseerd op de voorspelde kansen op basis van het model.
+
+```{r, echo=FALSE}
+egroups.complement <- ngroups - egroups
+t(array(c(egroups, egroups.complement), dim=c(length(egroups), 2), dimnames=dimnames))
+```
+
+\
+
+Beide tabellen zullen doorgaans niet identiek zijn. De verschillen per cel kan je gebruiken om het model te beoordelen. Bij een goed model sluiten de voorspelde frequenties dicht aan bij de geobserveerde frequenties. De verschillen zijn met andere woorden klein. Bij een slecht model geldt het omgekeerde.
+
+Om de "goodness-of-fit" van het model te toetsen bereken je een teststatistiek aan de hand van volgende formule:
+
+$$\sum^2_{i=1} \sum^N_{j=1} \frac{ (f_{obs, ij} - f_{exp, ij})^2 }{ f_{exp, ij} }$$
+\
+
+In de formule zie je dat de verschillen tussen de geobserveerde en de voorspelde frequenties inderdaad centraal staan ($f_{obs, ij} - f_{exp, ij}$). Als die verschillen over het algemeen groot zijn, dan neemt de teststatistiek een hoge waarde aan. Als die verschillen over het algemeen klein zijn, dan krijgt de teststatistiek een lage waarde. 
+
+De nulhypothese stelt dat er geen verschillen zijn tussen de geobserveerde en voorspelde frequenties. De alternatieve hypothese stelt dat er minstens één verschil is (in de twintig cellen).
+
+De teststatistiek benadert een $\chi^2$-verdeling met $N-2$ vrijheidsgraden, waarbij $N$ het aantal groepen voorstelt (hier 10). Aan de hand van de waarde van de teststatistiek in jouw steekproef kan je afleiden of er bewijs is tegen de nulhypothese. 
+
+\
+
+In R kan je de toets uitvoeren met de functie `logitgof()` uit het package `generalhoslem`. Deze functie vereist twee stukken informatie: de geobserveerde `intentie` en de voorspelde `kansen`. 
+
+In R kan je de voorspelde kansen laten berekenen met de functie `fitted()`. Een meer uitgebreide uitleg vind je wat hoger op deze pagina, onder <a href="#predicts">Predicties</a>. Hieronder voegen we die kansen meteen toe aan het data frame `barrieres`.^[Dat hadden we ook al gedaan bij de <a href="#auc">uitleg over de AUC</a>. Hier herhalen we het voor de duidelijkheid. Merk op dat we bij de uitleg over de AUC de volgorde van het data frame `barrieres` hebben veranderd. Als je dat ook hebt gedaan, dan zal onderstaande code niet tot het correcte resultaat leiden.]
+
+```{r, eval=FALSE}
+barrieres$kansen <- fitted(model1)
+```
+
+\
+
+Nu heb je alles om de functie `logitgof()` te gebruiken.
+
+```{r}
+logitgof(obs=barrieres$intentie, exp=barrieres$kansen)
+```
+
+\
+
+Je stelt een p-waarde vast die groter is dan 0.05. Je besluit dat je de nulhypothese niet kan verwerpen op het 5% significantieniveau.
+
+\
+
+### Enkele bedenkingen bij de Hosmer-Lemeshow toets {-}
+
+De Hosmer-Lemeshow toets werkt niet in alle omstandigheden perfect.
+
+Zo is er in bepaalde gevallen een lage power. Dat betekent dat vaak verkeerdelijk besloten wordt dat het model goed fit, terwijl dat niet het geval is.
+
+Daarnaast is de indeling in groepen niet altijd objectief te verantwoorden. Zowel het aantal groepen als de manier waarop de data worden verdeeld kunnen verschillen ten gevolge van arbitraire keuzes. Dat kan een invloed hebben op de waarde van de teststatistiek en dus op de conclusie van de toets.
+
+\
+
+------------------
+
+
+# Referenties
+
+<p id='Referentie'>Van Nieuwenhove L. & De Wever B. (2023). Psychosocial barriers to adult learning and the role of prior learning experiences: A comparison based on educational level. <i>Adult Education Quarterly 74</i> (1), pp.62-87. DOI: 10.1177/07417136231147491</p>
+
+\
+
+------------------
+
+# Voetnoten
+
+\
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```
+
+
+```{js, echo=FALSE}
+// modal box
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+btn.onclick = function() {
+modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal) {
+modal.style.display = "none";
+}
+} 
+
+
+
+// modal box 2
+// Get the modal
+var modal2 = document.getElementById("myModal2");
+
+// Get the button that opens the modal
+var btn2 = document.getElementById("myBtn2");
+
+// Get the <span> element that closes the modal
+var span2 = document.getElementsByClassName("close")[1];
+
+// When the user clicks on the button, open the modal
+btn2.onclick = function() {
+modal2.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span2.onclick = function() {
+modal2.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal2) {
+modal2.style.display = "none";
+}
+} 
+
+
+
+
+
+// modal box 3
+// Get the modal
+var modal3 = document.getElementById("myModal3");
+
+// Get the button that opens the modal
+var btn3 = document.getElementById("myBtn3");
+
+// Get the <span> element that closes the modal
+var span3 = document.getElementsByClassName("close")[2];
+
+// When the user clicks on the button, open the modal
+btn3.onclick = function() {
+modal3.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span3.onclick = function() {
+modal3.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal3) {
+modal3.style.display = "none";
+}
+} 
+```

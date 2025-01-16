@@ -1,0 +1,227 @@
+---
+title: "Data verkennen: ontbrekende data"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+set.seed(1)
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+In een ideale wereld beschik je als onderzoeker over een perfect volledig databestand.
+
+In de praktijk zal je echter in veel datasets ook 'gaten' tegenkomen. Die gaten worden in R aangegeven met `NA`. Ze kunnen ontstaan om allerlei redenen. Misschien sloeg iemand een enquêtevraag over, of misschien werkte de apparatuur om een meting uit te voeren niet goed. Hoe dan ook, als onderzoeker zal je ...
+
+<ol>
+<li> moeten uitzoeken waar in je dataset zich eventueel ontbrekende data bevinden en
+<li> moeten beslissen wat te doen met zulke ontbrekende data.
+</ol>
+
+<br>
+
+R kan hierbij helpen. Hieronder demonstreren we hoe.
+
+<br>
+
+------------------
+
+# De dataset
+
+```{r, echo=FALSE}
+
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete2.csv")
+
+```
+
+
+De dataset `enquete` bevat gegevens van `r dim(enquete)[2]` variabelen geobserveerd bij `r dim(enquete)[1]` Amerikaanse studenten die een vak statistiek volgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `enquete` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete2.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(enquete) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(enquete)[2]` variabelen zijn met telkens `r dim(enquete)[1]` observaties. 
+
+<br>
+
+Hier zullen we de vector `enquete$TV` gebruiken.
+
+```{r}
+tv <- enquete$TV
+```
+
+<br>
+
+Merk op: veel van de functies op deze pagina kan je even goed toepassen op een heel dataframe ineens. Het zal echter vaak voorkomen dat je dit variabele per variabele zal willen doen. Daarom spreken we in de voorbeelden hieronder meestal over vectoren en niet over dataframes.
+
+-------------------
+
+# Zijn er ontbrekende data?
+
+Een goede start is om te achterhalen of er ontbrekende data zijn in je dataset. Daarvoor is de functie `is.na()` heel nuttig. Voor elke plaats in een object zal die functie je een waarde `TRUE` geven indien het element ontbreekt en een `FALSE` als er wel een element te vinden is op die plaats. 
+
+```{r}
+is.na(tv)
+```
+
+<br>
+
+Zo'n lange nieuwe vector met allerlei `TRUE` en `FALSE` is onoverzichtelijk en niet zo informatief. Op dit moment stel je je de vraag of er *ergens* in je vector iets ontbreekt. Op die vraag wil je in eerste instantie een eenvoudige ja of nee als antwoord. De functie `any()` kan hierbij helpen. Die geeft een waarde `TRUE` als er op tenminste één plaats in de vector een `TRUE` voorkomt.
+
+```{r}
+any(is.na(tv))
+```
+
+<br>
+
+Deze output houdt in dat er ergens in je vector een waarde ontbreekt. Daar zal je `NA` zien staan. Dat is hoe ontbrekende data worden gemarkeerd in R.
+
+<br>
+
+-------------------
+
+# Waar zitten de ontbrekende data?
+
+<!-- dataset nog creëren -->
+
+Vervolgens moet je uitzoeken *op welke plaats* in de vector die ontbrekende data zich bevinden. De functie `which()` vertelt je welke plaatsen in een vector een waarde `TRUE` bevatten. 
+
+```{r}
+which(is.na(tv))
+```
+
+<br>
+
+Als je de waarde op één van die plaatsen probeert op te roepen, dan zie je inderdaad `NA`. 
+
+```{r}
+tv[2]
+```
+
+<br>
+
+De functie `length()` vertelt je nu hoeveel ontbrekende datapunten er zijn (al heb je in dit geval natuurlijk niet veel hulp nodig bij het tellen).
+
+```{r}
+ontbrekend <- which(is.na(tv))
+length(ontbrekend)
+```
+
+<br>
+
+Ook het omgekeerde is mogelijk: welke plaatsen in de vector bevatten wél data? Dat kan met een uitroepteken `!` in je code. Dat betekent zoveel als het woord "niet". Alle `TRUE` worden hierdoor `FALSE` en omgekeerd.
+
+```{r}
+which(!is.na(tv))
+```
+
+Zie je welke getallen ontbreken?
+
+<br>
+
+----------------
+
+# Wat kan je doen met ontbrekende data?
+
+Omwille van ontbrekende data zullen veel functies niet meer normaal werken. R zal je bijvoorbeeld niet toestaan om zomaar het gemiddelde te berekenen van een vector met ontbrekende waarden.
+
+```{r}
+mean(tv)
+```
+
+<br>
+
+Wat kan je daar nu aan doen?
+
+<br>
+
+
+## Ontbrekende data negeren met `na.rm` {-}
+
+`na.rm` is een argument dat je in veel functies vindt. Als je kiest voor `na.rm = TRUE` dan worden alle ontbrekende waarden genegeerd bij het uitvoeren van die functie ("rm" staat voor "remove").
+
+```{r}
+mean(tv, na.rm=TRUE)
+```
+
+Om het gemiddelde te berekenen worden alle observaties (die niet `NA` zijn) opgeteld en gedeeld door `r length(tv)-length(ontbrekend)`, niet door `r length(tv)`.
+
+<br>
+
+## Ontbrekende data verwijderen met `na.omit()` {-}
+
+`na.omit()` is een functie waarmee je alle ontbrekende data uit een vector of een dataframe kan verwijderen.
+
+Hier passen we de functie toe op het dataframe `enquete`. Je verwijdert dan alle rijen waarin tenminste één keer `NA` voorkomt. Dat is nogal drastisch en kan ertoe leiden dat je heel wat nuttige data weggooit.
+
+```{r}
+effectief <- na.omit(enquete)
+```
+
+<br>
+
+Hoeveel rijen zijn er dan nog over?
+
+```{r}
+dim(effectief)[1]
+```
+
+<br>
+
+## Zelf waarden invullen {-}
+
+De `which`-functie geeft je de locaties van de ontbrekende data in de vector (zie eerder). Dit kan je vervolgens gebruiken om die locaties op te vullen met waarden die je zelf kiest.
+
+<div class='warning'><p>
+Je moet natuurlijk heel voorzichtig zijn met waarden invullen die niet bestaan. Het mag enkel als je goed kan verantwoorden waarom je het doet. 
+</p></div>
+
+<br>
+
+```{r, eval=FALSE}
+ontbrekend <- which(is.na(tv))
+tv[ontbrekend] <- 0
+```
+
+<br>

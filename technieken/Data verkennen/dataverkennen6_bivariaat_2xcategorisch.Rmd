@@ -1,0 +1,222 @@
+---
+title: "Data verkennen: twee categorische variabelen"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+library(vcd)
+
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+Het is een goed idee om een dataset te verkennen, vooraleer je er allerlei statistische technieken op loslaat. R biedt een heel uitgebreid gamma aan functies om dat te doen. 
+
+De output van die functies dient vaak niet om te publiceren. Het is vooral de bedoeling om zelf meer inzicht te krijgen in de variabelen in je dataset en de samenhang tussen die variabelen.
+
+Op deze pagina vind je hoe je de samenhang tussen twee categorische variabelen kan beschrijven en visueel voorstellen.
+
+<br>
+
+-------------
+
+# De dataset
+
+```{r, echo=FALSE}
+
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv")
+
+```
+
+
+De dataset `enquete` bevat gegevens van `r dim(enquete)[2]` variabelen geobserveerd bij `r dim(enquete)[1]` Amerikaanse studenten die een vak statistiek volgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `enquete` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(enquete) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(enquete)[2]` variabelen zijn met telkens `r dim(enquete)[1]` observaties. 
+
+<br>
+
+Variabelen die je interesseren kan je hier eventueel al in een apart object opslaan.
+
+```{r}
+
+klas <- enquete$Class
+geslacht <- enquete$Sex
+
+```
+
+<br>
+
+-------------------
+
+# Kruistabel en visualisatie {.tabset .tabset-fade .tabset-pills}
+
+## Absolute frequentie {-}
+
+<br>
+
+<div class='tabset_kader'>
+
+Met `table()` creëer je een kruistabel of bivariate frequentietabel waarbij je in elke cel de absolute frequentie kan aflezen.
+
+```{r}
+table(klas, geslacht)
+```
+
+<br>
+
+Een belangrijk onderdeel van het verkennen van data bestaat erin om een visuele voorstelling te maken van de data. Hier tonen we hoe je dat kan doen in het R-basispakket.^[Er bestaan ook R-packages die speciaal ontworpen zijn voor datavisualisatie. Het meest gebruikte heet ‘ggplot2’.]
+
+De functie `barplot()` kan je gebruiken op onderstaande manier. Als argument geef je een object van type `table`.
+
+```{r}
+abs.freq <- table(klas, geslacht)
+
+barplot(abs.freq, 
+        col=c('green', 'blue', 'yellow', 'red')
+        )
+
+legend('topleft', 
+       legend=levels(factor(klas)), # let op: variabele 'klas' moet van type factor zijn
+       fill=c('green', 'blue', 'yellow', 'red'), 
+       inset=c(0.1, 0.05), # positie van de legende aanpassen
+       cex=0.7 # grootte van de legende
+       )
+```
+
+<br>
+
+</div>
+
+--------------------
+
+## Relatieve frequentie {-}
+
+<br>
+
+<div class='tabset_kader'>
+
+Elke cel van de tabel hieronder bevat de proportie observaties ten opzichte van het totaal aantal observaties. 
+
+```{r}
+abs.freq <- table(klas, geslacht)
+proportions(abs.freq)
+```
+
+<br>
+
+Kruistabellen waarbij de relatieve frequenties worden berekend per rij zijn ook mogelijk.
+
+```{r}
+proportions(abs.freq, margin=1)
+```
+
+<br>
+
+En natuurlijk ook per kolom.
+
+```{r}
+proportions(abs.freq, margin=2)
+```
+
+<br>
+
+Een belangrijk onderdeel van het verkennen van  data bestaat erin om een visuele voorstelling te maken van de data. Hier tonen we hoe je dat kan doen in het R-basispakket.^[Er bestaan ook R-packages die speciaal ontworpen zijn voor datavisualisatie. Het meest gebruikte heet ‘ggplot2’.]
+
+```{r}
+rel.freq <- proportions(abs.freq, margin=2)
+
+barplot(rel.freq,
+        col=c('green', 'blue', 'yellow', 'red')
+        )
+
+legend('bottomleft',
+       legend=levels(factor(klas)), # let op: variabele 'klas' moet van type factor zijn
+       fill=c('green', 'blue', 'yellow', 'red'), 
+       inset=c(0.1,0.1), # locatie van de legende aanpassen
+       cex=0.8
+       )
+```
+
+<br>
+
+</div>
+
+-------------------
+
+# Associatiematen
+
+Cramer's V is een maat voor de associatie of samenhang tussen twee categorische variabelen. Deze maat bouwt voort op $\chi^2$. Cramer's V kan alle waarden van 0 tot 1 aannemen. 0 wijst op de afwezigheid van associatie terwijl 1 wijst op een perfecte associatie.
+
+Cramer's V kan je niet berekenen in het basispakket van functies in R. Je zal het package `vcd` moeten installeren en laden.  
+
+```{r, eval=FALSE}
+install.packages("vcd") # eenmalig installeren
+library(vcd) # package laden voor gebruik
+```
+
+<br>
+
+Met de functie `assocstats()` kan je Cramer's V nu laten berekenen. Let op: je moet een tabel aan de functie geven.
+
+```{r}
+kruistabel <- table(klas, geslacht)
+assocstats(kruistabel)
+```
+
+<br>
+
+------------------
+
+# Voetnoten {#voetnoten}
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```

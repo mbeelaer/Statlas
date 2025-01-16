@@ -1,0 +1,822 @@
+---
+title: "Structural Equation Modelling"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:/Users/mbeelaer/OneDrive - UGent/FPPW. Statlas/statlas_technieken.css
+    pandoc_args: 
+      - "--wrap=preserve"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+options(width=120) # output van sommige chunks wordt anders te snel gewrapt naar een volgende lijn
+
+```
+
+```{r include=FALSE}
+library(lavaan)
+```
+
+```{r, echo=FALSE}
+vaccin <- read.csv('https://statlas.ugent.be/datasets/vaccin.csv')
+```
+
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld.
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+<details>
+<summary>
+Referentie
+</summary>
+
+<p class="meerInfo">
+Het voorbeeld op deze pagina is afkomstig uit een <a href='#Referentie'>studie van Schmitz, Luminet, Klein, Morbée, Van den Bergh, Van Oost, Waterschoot, Yzerbyt & Van Steenkiste (2022)</a>. Om praktische en didactische redenen werden de hypothesen en de data enigszins aangepast.
+</p>
+</details>
+
+<br>
+
+------------------------------------------------------------------------
+
+# Doel
+
+Structural Equation Modelling (SEM)[^strvglmdl] is een techniek die je kan gebruiken om de onderliggende mechanismen bloot te leggen die een fenomeen kunnen verklaren. In die zin lijkt het sterk op <a href="https://statlas.ugent.be/technieken/SEM/padanalyse.html" target="_blank">padanalyse</a>.
+
+[^strvglmdl]: In het Nederlands: Structureel vergelijkingsmodel
+
+Een belangrijk extra element is dat er bij SEM ook latente variabelen in het model aanwezig kunnen zijn. Dat zijn variabelen die niet rechtstreeks meetbaar zijn. Ze moeten indirect gemeten worden aan de hand van een reeks "indicatoren", bv. vragen ("items") in een enqu&ecirc;te. Je mag er natuurlijk niet zomaar vanuit gaan dat een reeks indicatoren samen een goede meting zijn voor een bepaalde latente variabele. Dat moet je nagaan. Je moet bevestigen dat een vooropgestelde factorstructuur (= een aantal latente variabelen of "factoren", elk met hun eigen set van indicatoren) daadwerkelijk terug te vinden is in de data. Je moet met andere woorden een <a href="https://statlas.ugent.be/technieken/SEM/CFA.html" target="_blank">confirmatorische factoranalyse (CFA)</a> uitvoeren.
+
+Met SEM ben je in staat om in &eacute;&eacute;n model padanalyse te combineren met confirmatorische factoranalyse.
+
+<br>
+
+## Wat kan je leren uit SEM? {-}
+
+Met een SEM kan je verschillende zaken proberen te achterhalen. Belangrijke doelen van de analyse zijn
+
+<ul>
+<li>om te achterhalen of het model in zijn geheel goed fit met de data, 
+<li>om alle coëfficiënten te schatten en
+<li>om te toetsen of deze coëfficiënten significant verschillen van nul.
+</ul>
+
+De volgorde is hier belangrijk! Het heeft geen zin om conclusies te trekken over het al dan niet significant zijn van de afzonderlijke coëfficiënten in een model dat in zijn geheel niet goed fit met de data.
+
+<br>
+
+## De studie van Schmitz et al. (2022) {-}
+
+Schmitz et al. (2022) probeerden de vaccinatie-intentie te verklaren. Dat is de intentie die mensen al dan niet hadden om zich te laten vaccineren tegen het coronavirus.[^doelStudie] Op basis van eerder onderzoek en van de Self-Determination Theory vermoedden de onderzoekers dat verschillende soorten motivatie een rol zouden kunnen spelen in de vaccinatie-intentie. Daarnaast zouden ook percepties van risico's met betrekking tot infectie en de pandemie een effect kunnen hebben.
+
+[^doelStudie]: Schmitz et al. (2022) onderzochten ook de effecten op andere afhankelijke variabelen. Dat deel van hun studie wordt op deze pagina niet besproken.
+
+Op basis van deze hypothesen kwamen de onderzoekers tot een specifiek systeem van variabelen waarvan ze dachten dat het terug te vinden zou zijn in de data. Dit systeem van variabelen vind je in het diagram hieronder, binnen de rode stippellijn. Het wordt ook het "structurele gedeelte" van het SEM-model genoemd.
+
+Belangrijk is dat de meeste variabelen "latent" zijn. Ze zijn met andere woorden niet rechtstreeks meetbaar. Ze moeten worden gemeten door verschillende indicatoren te combineren (in dit geval items in een vragenlijst). Er is naast het structurele gedeelte dus ook een "meetgedeelte" of "meetmodel" (in het Engels: "measurement model"). Dat is alles wat binnen de blauwe stippellijn staat in het diagram hieronder.
+
+Klik op het diagram om het te vergroten.
+
+<br>
+
+<img id="myBtn" class="modalBtn" src='https://statlas.ugent.be/img/SEM_TikZ.PNG'>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src='https://statlas.ugent.be/img/SEM_TikZ.PNG' alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+### Overzicht variabelen {-}
+
+Hieronder vind je een overzicht van alle variabelen in dit model. De linkerkolom bevat de variabelen die samen het structurele gedeelte van het model uitmaken. De tabel bevat de Engelse naam uit het artikel, een Nederlandse vertaling en de naam die de onderzoekers aan de variabele hebben gegeven in R.
+
+Bij elke latente variabele vind je ook de indicatoren terug die gezamenlijk die variabele zouden meten. Hiervan geven we enkel de naam in R weer.
+
+<details>
+<summary>Toon/verberg het overzicht</summary>
+<div class="meerInfo">
+<table>
+  <tr>
+    <th class="colnaam">Engels</th>
+    <th class="colnaam">Nederlands</th>
+    <th class="colnaam">Naam in R</th>
+    <th class="colnaam">Indicatoren</th>
+  </tr>
+  
+  <tr>
+    <th>Pandemic-related health concerns</th>
+    <td>Pandemie-gerelateerde zorgen over gezondheid</td>
+    <td><tt>worries</tt></td>
+    <td><tt><ul><li>worries_relatives<li>worries_health</ul></tt></td>
+  </tr>
+  
+  <tr>
+    <th>Infection-related risk perception</th>
+    <td>Infectie-gerelateerde perceptie van risico</td>
+    <td><tt>risks</tt>  </td>
+    <td><tt><ul><li>risk_other<li>risk_self</ul></tt></td>
+  </tr>
+  
+  <tr>
+    <th>Autonomous motivation</th>
+    <td>Autonome motivatie</td>
+    <td><tt>motv_ident</tt></td>
+    <td><tt><ul><li>motv_vaccin_ident_2<li>motv-vaccin_ident_3<li>motv_vaccin_ident_4</ul></tt></td>
+  </tr>
+
+<tr>
+    <th>Controlled motivation</th>
+    <td>Gecontroleerde motivatie</td>
+    <td><tt>motv_exter</tt></td>
+    <td><tt><ul><li>motv_vaccin_exter_1<li>motv_vaccin_exter_3</ul></tt></td>
+  </tr>
+  
+  <tr>
+    <th>Distrust-based amotivation</th>
+    <td>Demotivatie door wantrouwen</td>
+    <td><tt>motv_distr</tt></td>
+    <td><tt><ul><li>motv_vaccin_distrust_1<li>motv_vaccin_distrust_4<li>motv_vaccin_distrust_5</ul></tt></td>
+  </tr>
+  
+  <tr>
+    <th>Effort-based amotivation</th>
+    <td>Demotivatie door inspanning</td>
+    <td><tt>motv_effrt</tt></td>
+    <td><tt><ul><li>motv_vaccin_effort_1<li>motv_vaccin_effort_2<li>motv_vaccin_effort_3</ul></tt></td>
+  </tr>
+  
+  <tr>
+    <th>Vaccination intention</th>
+    <td>Vaccinatie-intentie</td>
+    <td><tt>vaccination_intention</tt></td>
+    <td style="text-align: center">Niet van toepassing[^geenLatenteVar]</td>
+  </tr>
+
+</table>
+</div>
+
+[^geenLatenteVar]: Vaccinatie-intentie is rechtstreeks meetbaar. Het is m.a.w. een manifeste variabele, geen latente variabele. Er zijn dan ook geen indicatoren.
+
+</details>
+
+<br>
+
+<!-- De onderzoekers verwachten dat de indicatoren op een specifieke manier samenhangen en zo metingen vormen voor de latente constructen.[^checkFactoren] Dit noemen we het meetgedeelte van een model.  -->
+
+<!-- [^checkFactoren]: Uit extra wetenschappelijke voorzichtigheid werd dit al op voorhand gecontroleerd door CFA's met verschillende factoren onderling te vergelijken. (Schmitz et al., 2022, p.290).  -->
+
+
+
+------------------------------------------------------------------------
+
+# Packages en dataset
+
+Voor de analyse van een SEM kan je functies uit het R-package `lavaan` gebruiken.
+
+```{r, eval=FALSE}
+install.packages('lavaan') # eenmalig installeren
+
+library(lavaan) # bij de start van elke sessie
+```
+
+<br>
+
+De dataset bevat gegevens van `r dim(vaccin)[2]` variabelen geobserveerd bij `r dim(vaccin)[1]` individuen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `vaccin` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+vaccin <- read.csv('https://statlas.ugent.be/datasets/vaccin.csv')
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(vaccin)
+
+```
+
+In de output van `str()` kan je zien dat er inderdaad `r ncol(vaccin)` variabelen zijn met telkens `r nrow(vaccin)` observaties.
+
+<br>
+
+------------------------------------------------------------------------
+
+# Analyses vooraf
+
+Het is een goed idee om niet overhaast te werk te gaan. Specifieker, het is aan te raden om eerst het meetmodel goed te krijgen om pas in een volgende fase het volledige SEM-model (meetmodel + structuurmodel) te fitten. Waarom? De reden om een SEM-analyse uit te voeren is op de eerste plaats om na te gaan of het <i>structureel</i> model goed fit met de data. Daarin zitten namelijk de wetenschappelijke probleemstelling en hypothesen vervat. Als je meteen een SEM-model zou fitten en de fit blijkt niet goed te zijn, dan kan je niet zomaar achterhalen of het ligt aan een slecht fittend meetmodel of een slecht fittend structureel model.
+
+Welke stappen kan je ondernemen om het meetmodel goed te krijgen?
+
+<ul>
+<li>
+Om het meetmodel goed te krijgen kan je bijvoorbeeld eerst een CFA uitvoeren op elke latente variabele afzonderlijk. Voor latente variabelen waarvoor een gevestigd, algemeen aanvaard meetinstrument bestaat, mag je er meestal wel van uitgaan dat de items een goede meting zijn van de latente variabele. Als je echter zelf een meetinstrument hebt samengesteld om een latente variabele te meten, dan kan het zeker de moeite lonen om eerst, vooraf, een CFA uit te voeren voor die latente variabele apart.
+
+<li>
+Nadat je vrij zeker bent van elke latente variabele afzonderlijk loont het nog de moeite om een CFA uit te voeren voor alle latente variabelen tegelijk, in één meetmodel. Schmitz et al. (2020) doen dit zelfs verschillende keren. Ze construeren onder meer een meetmodel waarbij er slechts één latente variabele "motivatie" is, die wordt gemeten door alle indicatoren $Y_5$ tot en met $Y_{16}$. Dit meetmodel vergelijken ze met een meetmodel waarbij er vier afzonderlijke latente variabelen m.b.t. motivatie zijn (zoals in het diagram hierboven). Dit tweede model blijkt beter te fitten met de data dan het eerste, waardoor de onderzoekers meer zekerheid inbouwen dat er wel degelijk vier duidelijk te onderscheiden latente variabelen bestaan.
+</ul>
+
+In de demonstratie hieronder tonen we enkel de SEM-analyse. Meer info over CFA, inclusief een demonstratie, vind je <a href="https://statlas.ugent.be/technieken/SEM/CFA.html" target="_blank">hier</a>. 
+
+Het is dus aan te raden om pas aan de "echte" SEM-analyse te beginnen nadat je enige zekerheid hebt gekregen over het meetmodel. Maar zelfs die SEM-analyse zou je stapsgewijs kunnen uitvoeren, te beginnen met een deel van het model om geleidelijk aan uit te breiden en samen te voegen in een groter geheel. Dat kan helpen om oorzaken van eventuele slechte fit te identificeren. 
+
+<br>
+
+------------------------------------------------------------------------
+
+# Modelspecificatie met <tt>lavaan</tt>
+
+## Verbanden tussen variabelen specifiëren {.tabset .tabset-fade .tabset-pills .unnumbered}
+
+Eerst leg je vast welke verbanden je model moet bevatten tussen welke variabelen. Die structuur stop je in een object, hier `mijnSEM` genaamd. Vergeet de aanhalingstekens `'` helemaal vooraan en achteraan niet. De modelsyntax vormt immers een "string" (een stuk tekst) in R. Deze modelspecificatie zal in een volgende fase aan de functie `sem()` worden gegeven, die schattingen van alle modelparameters zal teruggeven. Straks meer daarover.
+
+In het model hieronder zijn verschillende soorten verbanden opgenomen, elk met een eigen syntax. Die zullen we een voor een bespreken.[^comments]
+
+[^comments]: Alles wat rechts van een `#` staat is commentaar. Het is enkel bedoeld om wat duiding te geven bij de code.
+
+```{r modelspec}
+mijnSEM <- '
+# Latente variabelen
+  worries =~ worries_relatives + worries_health
+  risks =~ risk_other + risk_self
+  motv_ident =~ motv_vaccin_ident_2 + motv_vaccin_ident_3 + motv_vaccin_ident_4
+  motv_exter =~ motv_vaccin_exter_1 + motv_vaccin_exter_3
+  motv_distr =~ motv_vaccin_distrust_1 + motv_vaccin_distrust_4 + motv_vaccin_distrust_5
+  motv_effrt =~ motv_vaccin_effort_1 + motv_vaccin_effort_2 + motv_vaccin_effort_3
+
+# Factor covarianties
+  worries ~~ risks
+  motv_ident ~~ motv_exter
+  motv_ident ~~ motv_distr
+  motv_ident ~~ motv_effrt
+  motv_exter ~~ motv_distr
+  motv_exter ~~ motv_effrt
+  motv_distr ~~ motv_effrt
+  
+# Directe effecten
+  motv_ident ~ worries + risks
+  motv_exter ~ worries + risks
+  motv_distr ~ worries + risks
+  motv_effrt ~ worries + risks
+  vaccination_intention ~ worries + risks + motv_ident + motv_exter + motv_distr + motv_effrt
+'
+```
+
+
+<br>
+
+### Latente variabelen {-}
+
+<div class='tabset_kader'>
+Hier worden verbanden tussen indicatoren en potentiële factoren vastgelegd (i.e. de "factorstructuur"). 
+
+Deze code weerspiegelt dus de hypothesen die de onderzoekers bij voorbaat hadden over welke indicatoren welke latente variabele meten. Het gelijkheidsteken `=` in combinatie met een tilde `~` kan je lezen als "wordt gemeten door". Dus kan je de eerste regel hierboven begrijpen als "de latente variabele `worries` wordt gemeten door de indicatoren `worries_relatives` en `worries_health`.[^3]
+
+[^3]: Of dat werkelijk het geval is zal natuurlijk moeten blijken uit de analyse. Op dit moment is het nog maar een hypothese!
+
+</div>
+
+<br>
+
+
+
+### Factor covarianties {-}
+
+<div class='tabset_kader'>
+Covarianties tussen factoren kunnen ook worden geschat en weergegeven. Als je <i>niet</i> uitdrukkelijk de covarianties neerschrijft in de modelspecificatie, dan zullen enkel covarianties tussen de zuiver exogene variabelen[^exogeen] automatisch worden opgenomen, i.c. `worries` en `risks`.
+
+Covarianties tussen mediatoren (hier: `motv_ident`, `motv_exter`, `motv_distr` en `motv_effrt`) worden dus niet standaard opgenomen. Hier is het aan de onderzoeker om te bepalen of er goede inhoudelijke/theoretische redenen zijn om covarianties tussen (sommige) mediatoren toe te laten. Vaak specifiëren onderzoekers covarianties tussen alle mediatoren. Merk op dat het toelaten van zulke covarianties meteen ook een "toegeving" inhoudt dat het model en de onderliggende theorie erg onvolledig zijn: dan zijn er namelijk nog verbanden tussen de mediatoren die op geen enkele manier in dit model worden verklaard.
+
+In de output bij dit voorbeeld zal je schattingen van covarianties zien tussen de exogene factoren `worries` en `risks` en ook tussen alle mediatoren. In de plot die het model visualiseert (zie eerder) zie je deze covarianties getekend als dubbele pijlen met stippellijn.
+
+[^exogeen]: Exogene variabelen zijn variabelen die niet door andere variabelen in het model verklaard worden. In het diagram bovenaan de pagina zijn het variabelen waar geen enkele pijl toekomt.
+
+</div>
+
+<br>
+
+
+
+### Directe effecten {-}
+
+<div class='tabset_kader'>
+Directe effecten zijn de effecten in het structurele gedeelte van het model. Elk direct effect stemt overeen met een enkele pijl in het rode gedeelte van het diagram van hierboven. Een voorbeeld is het effect van autonome motivatie op de vaccinatie-intentie. Deze effecten codeer je met de operator `~`. 
+
+In de modelspecificatie hierboven is er een lijn code per afhankelijke variabele. Als je dat wenst kan je de code wat meer opsplitsen. Voor de effecten op bijvoorbeeld `motv_ident` wordt dat dan:
+
+```{r, eval=FALSE}
+'
+motv_ident ~ worries
+motv_ident ~ risks
+'
+```
+
+
+</div>
+
+<br>
+
+
+## Parameters schatten {.tabset .tabset-fade .tabset-pills -}
+
+Nadat de specificatie van het model is afgerond, laat je R alle parameters schatten met de functie `sem()`. Deze functie heeft de specificatie van het model nodig (object `mijnSEM`) en de data.^[In plaats van de volledige dataset wordt vaak enkel de variantie-covariantiematrix aan `sem()` gegeven.]
+
+```{r, cache=TRUE}
+fit <- sem(mijnSEM, data = vaccin)
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+# Resultaten tonen {.tabset .tabset-fade .tabset-pills}
+
+Om de resultaten te zien gebruik je de functie `summary()`. Het object `fit` kan uiteraard niet ontbreken. Met de argumenten kan je verder bepalen wat je precies in de output wil zien. (De interpretatie van de output behandelen we verderop.)
+
+```{r, eval=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+```
+
+<br>
+
+De argumenten geven enkele keuzes aan die je kan maken bij de `summary()`-functie:
+
+<br>
+
+
+## <tt>fit.measures = TRUE</tt> {- #fitmaten}
+
+<div class='tabset_kader'>
+
+Indien `fit.measures = FALSE` - wat standaard het geval is - wordt enkel een $\chi^2$-toets uitgevoerd als maat voor de fit van het model. Deze toets is niet altijd voldoende om de model fit te beoordelen, zeker bij hele grote steekproeven. In Schmitz et al. (2020) zijn er 8887 respondenten, wat veel is.
+
+Het is aangeraden om sowieso bijkomende fitmaten te laten berekenen en te rapporteren in je publicatie, zoals CFI/TLI, RMSEA en SRMR. Al deze fitmaten zijn op een verschillende manier gevoelig voor misspecificatie van het model. Voeg deze fitmaten toe door eenvoudigweg het argument `fit.measures = TRUE` te gebruiken. De lezer van je onderzoek kan zo zelf een oordeel vellen.
+
+Meer uitgebreide uitleg over deze fitmaten (en meer) vind je in hoofdstuk 12 van
+
+→ Kline, R. B. (2015). Principles and practice of structural equation modeling (Fourth Edition). New York: Guilford Press.
+
+</div>
+
+<br>
+
+-----------------------------------------------------------------------
+
+## <tt>standardized = TRUE</tt> {-}
+
+<div class='tabset_kader'>
+
+Het is niet zomaar mogelijk om de padcoëfficiënten onderling te vergelijken en om uitspraken te doen over welke groter of kleiner is. Dat komt omdat de getalwaarde ervan afhangt van de meeteenheid van de variabelen. 
+
+Met het argument `standardized = TRUE` krijg je een extra kolom `Std.all` met schattingen voor gestandaardiseerde padcoëfficiënten. Wanneer er nu twee pijlen in eenzelfde variabele toekomen, zoals bij `motv_ident`, kan je wel de grootte van de verschillende effecten vergelijken.
+
+</div>
+
+<br>
+
+-----------------------------------------------------------------------
+
+## <tt>rsquare = TRUE</tt> {-}
+
+<div class='tabset_kader'>
+
+Met dit argument kan je een schatting van de proportie verklaarde variantie (m.a.w. de determinatiecoëfficiënt $R^2$) van elke endogene variabele laten berekenen.
+
+</div>
+
+<br>
+ 
+------------------------------------------------------------------------
+
+# Resultaten interpreteren
+
+Wat kan je leren uit de output van `summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)`?
+
+<br>
+
+```{r, echo=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+```
+
+<br>
+
+## Model fit {-}
+
+Of het model in zijn geheel goed fit met de data kan je achterhalen met behulp van de verschillende fitmaten.
+
+Let op! De $\chi^2$-toets onder `Model Test User Model` interpreteren is hier anders dan wat je misschien intuïtief zou denken. Hier stelt de nulhypothese dat er een goede fit is. Dus als je een p-waarde kleiner dan 0.05 ziet, dan is de conclusie dat je de nulhypothese van goede fit moet verwerpen. Dat is in ons model het geval.
+
+Met het argument `fit.measures = TRUE` heb je naast de $\chi^2$-toets nog andere fitmaten opgevraagd. Er bestaat geen consensus over de precieze waarde vanaf dewelke je zeker kan spreken van een goede fit. Vuistregels voor deze fitmaten die in de literatuur voorkomen zijn:
+
+<ul>
+<li>CFI/TLI > 0.95 of > 0.90
+<li>RMSEA < 0.05, < 0.06 of < 0.08
+<li>SRMR < 0.06 of < 0.08
+</ul>
+
+<br>
+
+De waarden voor deze drie fitmaten zijn goed, in tegenstelling tot wat de $\chi^2$-toets ons leerde. De conclusie die we in dit geval kunnen trekken is dat de fit goed is, omdat de "slechte" uitkomst van de $\chi^2$-toets kan worden verklaard door de hoge steekproefgrootte. [Zie ook eerder.](#fitmaten)
+
+De aanvaardbare fit betekent dat je verder kan gaan met de analyse van de afzonderlijke parameters als je dat wil. Je kan directe en indirecte effecten en andere geschatte parameters beoordelen. Als de model fit niet aanvaardbaar was geweest, dan zou dit niet zinvol zijn. In dat geval zou je eerst op zoek moeten naar een beter fittend model!
+
+<br>
+
+
+### Modification indices {-}
+
+Als de fit van je model niet goed is, kan je eventueel de functie `modificationIndices()` gebruiken om suggesties te krijgen voor verbeteringen. In de kolom `mi` lees je welke bijkomende parameters een substantiële impact zouden hebben op de fit.[^welInKolom]
+
+[^welInKolom]: Bij de verbanden die al in je model zitten, staat er logischerwijs een waarde 0 in deze kolom.
+
+<br>
+
+<div class="warning"> Hier moet je wel heel voorzichtig mee omspringen! Het is verleidelijk om je model fit te verbeteren door zonder nadenken wat extra connecties te maken tussen indicatoren en/of factoren. Eén van de problemen daarmee is dat elke extra connectie de fit van het model minstens een beetje zal verbeteren, ook als die connectie geen reële inhoudelijke betekenis heeft. Je mag een connectie enkel toevoegen als je er goede theoretische redenen voor hebt, dus als je echt reden hebt om te denken dat die relatie tussen indicatoren en/of factoren er in werkelijkheid zou kunnen zijn.</div>
+
+<br>
+
+```{r}
+modificationIndices(fit, 
+                    sort=TRUE, # Sorteer van grootste naar kleinste effect op de model fit (kolom 'mi')
+                    maximum.number=5L # Toon enkel de eerste vijf
+                    )
+```
+
+
+<br>
+
+
+## Factorladingen {- #factorladingen}
+
+De factorladingen geven informatie over de samenhang tussen de indicatoren. Je kan ze interpreteren als regressiecoëfficiënten in een model waarbij de indicator de afhankelijke variabele is en de factor de onafhankelijke variabele. De factorlading bij de eerste indicator van elke factor wordt door de functie `sem()` automatisch gefixeerd op 1. Zo wordt ervoor gezorgd dat de factor (ruwweg) de meeteenheid overneemt van één van de indicatoren.
+
+$$y_1 = \lambda_{11}\eta_1 + \epsilon_1$$
+<br>
+
+<div class='warning'>Niet vergeten: eigenlijk heeft het geen zin om factorladingen (of andere parameters) te interpreteren en beoordelen in een model dat in zijn geheel niet goed fit met de data.</div>
+
+<br>
+
+
+Onder `Latent Variables` vind je in de kolom `Std.all` de gestandaardiseerde factorladingen. Deze kan je met elkaar vergelijken om te bepalen welke groter en kleiner zijn.
+
+Een goede vuistregel stelt dat een gestandaardiseerde factorlading boven 0.70 moet liggen om de indicator als een degelijke meting te beschouwen. Boven 0.80 spreken we van een echt goede meting. In ons model voldoen veel factorladingen aan deze vuistregels, maar enkele doen dat duidelijk niet.
+
+Als je gebruik hebt gemaakt van gevestigde meetinstrumenten, die eerder al grondig zijn onderzocht, dan is een zwakkere factorlading niet erg. Heb je daarentegen bijvoorbeeld zelf een vragenlijst samengesteld, dan kan je overwegen om het item met de lage factorlading weg te laten. Besef wel dat een lagere factorlading automatisch ook een kleinere rol speelt in het bredere model. De keuze om zo'n item erin te laten of te schrappen zal dus relatief weinig impact hebben op conclusies over het structurele model.
+
+<br>
+
+
+## Covarianties tussen de factoren {-}
+
+Onder `Covariances` vind je in de kolom `Std.all` de gevraagde covarianties tussen de variabelen in het structurele model. 
+
+<br>
+
+
+## Varianties {-}
+
+Onder `Variances` vind je in de kolom `Std.all` de schattingen van de residuele varianties van elke indicator en van elke variabele in het structureel model. Dit is niet iets wat je uitdrukkelijk hebt gevraagd in de modelspecificatie. De functie `sem()` vult dit automatisch aan.[^lavaanFunctie]
+
+[^lavaanFunctie]: De functie `sem()` is gebruiksvriendelijk in de zin dat het heel wat van je syntax automatisch aanvult. Als je dit niet wil, dan kan je de functie `lavaan()` gebruiken in de plaats.
+
+De residuele variantie van een indicator is de variantie van de indicator die <i>niet</i> gedeeld wordt met de andere indicatoren van dezelfde factor. Het vormt het spiegelbeeld van de factorladingen: als de factorlading hoog is, dan moet de residuele variantie laag zijn.
+
+De variabelen in het structureel model vallen uiteen in twee soorten: de exogene en de endogene. De exogene factoren (`worries` en `risks`) zijn te herkennen doordat er geen punt voor staat. Zij worden door geen enkele andere variabele in het model verklaard. De output geeft dan gewoon de variantie weer. 
+
+Van de endogene factoren (bv. `motv_ident`) wordt de <i>residuele</i> variantie gegeven, dus de variantie die niet verklaard wordt in het model.
+
+<br>
+
+
+## Directe effecten {-}
+
+De schattingen van padcoëfficiënten (die overeenstemmen met directe effecten) zijn te vinden onder `Regressions`. De waarden onder `Std.all` kan je vergelijken met elkaar om te bepalen welk effect groter of kleiner is. Of een direct effect verschillend is van 0 kan je beoordelen aan de hand van de p-waarde of overschrijdingskans in de kolom `P(>|z|)`.
+
+In dit model zie je dat de meeste vooropgestelde directe effecten significant blijken te zijn op het 5%-significantieniveau. De uitzonderingen zijn de directe effecten van `worries` op `vaccination_intention` en van `risks` op `vaccination_intention`. 
+
+<br>
+
+
+## Indirecte en totale effecten laten berekenen {-}
+
+Het is mogelijk om indirecte en totale effecten te laten berekenen. Dit doe je best pas nadat je hebt vastgesteld dat het model in zijn geheel goed fit met de data. 
+
+Hoe ga je te werk? In de modelspecificatie voeg je labels (a11, a21,…) toe aan de verschillende directe effecten. De labels stellen schattingen van padcoëfficiënten (de directe effecten) voor. Aan de hand daarvan kan je nu de indirecte effecten laten berekenen. Daarvoor vermenigvuldig je de padcoëfficiënten op een pad tussen twee variabelen. Die berekeningen zie je in de modelspecificatie hieronder. Het effect dat je wil berekenen geef je een naam, gevolgd door de operator `:=` met daarachter de gepaste formule met labels. 
+
+Totale effecten berekenen kan ook. Die zijn niets anders dan de som van alle indirecte en directe effecten die te vinden zijn tussen twee variabelen.
+
+Een voorbeeld: de onderzoekers willen in de output het totale effect zien van `worries` op `vaccination_intention`. Daarvoor gaan ze na welke directe en indirecte paden allemaal lopen van `worries` naar `vaccination_intention`. Al die paden brengen ze samen in een totaal effect `c1`.
+
+`c1 := cp1 + a11*b1 + a12*b2 + a13*b3 + a14*b4`
+
+Schattingen van indirecte en totale effecten die je op deze manier opvraagt in de modelspecificatie (met de operator `:=`) komen in de output. Je vindt ze onder `Defined parameters`. Ook hier kan je de schattingen in de kolom `Std.all` vergelijken met elkaar. De significantie van het effect kan je beoordelen aan de hand van de p-waarde of overschrijdingskans in de kolom `P(>|z|)`.
+
+```{r, eval=FALSE}
+mijnSEM <- '
+# Latente variabelen
+  worries =~ worries_relatives + worries_health
+  risks =~ risk_other + risk_self
+  motv_ident =~ motv_vaccin_ident_2 + motv_vaccin_ident_3 + motv_vaccin_ident_4
+  motv_exter =~ motv_vaccin_exter_1 + motv_vaccin_exter_3
+  motv_distr =~ motv_vaccin_distrust_1 + motv_vaccin_distrust_4 + motv_vaccin_distrust_5
+  motv_effrt =~ motv_vaccin_effort_1 + motv_vaccin_effort_2 + motv_vaccin_effort_3
+
+# Factor covarianties
+  worries ~~ risks
+  motv_ident ~~ motv_exter
+  motv_ident ~~ motv_distr
+  motv_ident ~~ motv_effrt
+  motv_exter ~~ motv_distr
+  motv_exter ~~ motv_effrt
+  motv_distr ~~ motv_effrt
+  
+# Directe effecten
+  motv_ident ~ a11*worries + a21*risks
+  motv_exter ~ a12*worries + a22*risks
+  motv_distr ~ a13*worries + a23*risks
+  motv_effrt ~ a14*worries + a24*risks
+  vaccination_intention ~ cp1*worries + cp2*risks + b1*motv_ident + b2*motv_exter + b3*motv_distr + b4*motv_effrt
+  
+# Indirecte effecten
+  a11b1 := a11*b1
+  a12b2 := a12*b2
+  a13b3 := a13*b3
+  a14b4 := a14*b4
+  
+  a21b1 := a21*b1
+  a22b2 := a22*b2
+  a23b3 := a23*b3
+  a24b4 := a24*b4
+  
+  a1b := a11*b1 + a12*b2 + a13*b3 + a14*b4
+  a2b := a21*b1 + a22*b2 + a23*b3 + a24*b4
+
+# Total effects
+  c1 := cp1 + a11*b1 + a12*b2 + a13*b3 + a14*b4
+  c2 := cp2 + a21*b1 + a22*b2 + a23*b3 + a24*b4
+'
+```
+
+<br>
+
+Als je indirecte effecten laat berekenen kan je het model fitten met de volgende code.
+
+```{r, eval=FALSE}
+fit <- sem(mijnSEM, data=vaccin, se="bootstrap")
+```
+
+<br>
+
+In de code zie je een extra argument `se = 'bootstrap'`. Dit slaat op de methode om de standaardfouten (“standard error”) van parameters te berekenen. Wanneer je bv. een indirect effect schat, dan is de parameter een product van twee andere parameters en dus typisch niet normaal verdeeld over vele steekproeven heen. Met de “gewone” methode van standaardfouten berekenen kan dit tot verkeerde conclusies leiden over de significantie van het indirect effect. Daarom is het sterk aangeraden om hier steeds voor `se = 'bootstrap'` te kiezen. 
+
+<br>
+
+------------------------------------------------------------------------
+
+# Visualiseren van een SEM
+
+Er bestaan packages die toelaten om automatisch een diagram te maken van je model. Het is duidelijk dat een visualisatie van een model met veel variabelen al gauw ingewikkeld en onoverzichtelijk wordt, terwijl een visualisatie precies de omgekeerde bedoeling heeft! Mogelijk is het interessanter om bijvoorbeeld enkel het structurele gedeelte in een diagram te tonen. 
+
+Een package dat je kan gebruiken is bijvoorbeeld `lavaanPlot`. Meer info vind je <a href="https://cran.r-project.org/web/packages/lavaanPlot/index.html" target="_blank">hier</a>, voornamelijk onder "Documentation".
+
+```{r, eval=FALSE}
+install.packages("lavaanPlot") # eenmalig het package installeren
+
+library(lavaanPlot) # package laden voor gebruik
+
+lavaanPlot(model = fit,
+           node_options = list(shape = "box", fontname = "Helvetica"),
+           edge_options = list(color = "grey"),
+           coefs = TRUE,
+           sig=.05 # toon enkel significante coëfficiënten
+           )
+```
+
+Klik op de afbeelding om te vergroten.
+
+<img id="myBtn2" class="modalBtn" src='https://statlas.ugent.be/img/SEM_myLavaanPlot.png'>
+
+<!-- The Modal -->
+<div id="myModal2" class="modal">
+
+  <!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src='https://statlas.ugent.be/img/SEM_myLavaanPlot.png' alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+
+Een alternatief is het package `semPlot`. Meer info vind je <a href="https://cran.r-project.org/web/packages/semPlot/index.html" target="_blank">hier</a>, voornamelijk onder "Documentation".
+
+```{r, eval=FALSE}
+
+install.packages('semPlot') # eenmalig het package installeren
+
+library(semPlot) # package laden voor gebruik
+
+semPaths(fit, layout='circle')
+
+```
+
+Klik op de afbeelding om te vergroten.
+
+<img id="myBtn3" class="modalBtn" src='https://statlas.ugent.be/img/SEM_mySEMPlot.png' width=240 height=300>
+
+<!-- The Modal -->
+<div id="myModal3" class="modal">
+
+  <!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src='https://statlas.ugent.be/img/SEM_mySEMPlot.png' alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+
+------------------------------------------------------------------------
+
+# Meer weten?
+
+Online en in handboeken is leermateriaal te vinden dat wat meer diepgang biedt dan deze demonstratie. Enkele bronnen waarvan we de kwaliteit kunnen verzekeren zijn:
+
+<ul>
+<li> Een <a href="https://lib.ugent.be/en/catalog/rug01:002476043?i=0&q=kline+structural+equation" target="_blank">handboek</a> van Rex Kline (2016)
+<li> Twee lessenreeksen in de vorm van playlists op Youtube (<a href="https://www.youtube.com/playlist?list=PLliBbGBc5nn0NdoFO4nlbwZrT9TJ5V9sJ" target="_blank">"SEM1"</a> en <a href="https://www.youtube.com/playlist?list=PLliBbGBc5nn3tQiIBHFd-YvWK6dXb4ryr" target="_blank">"SEM2"</a>) van Sacha Epskamp
+<li> Een <a href="https://centerstat.org/introduction-to-structural-equation-modeling-async/" target="_blank">lessenreeks</a> van Daniel Bauer en Patrick Curran
+</ul>
+
+<br>
+
+------------------------------------------------------------------------
+
+# Voetnoten {#voetnoten}
+
+
+
+<br>
+
+
+# Referenties
+
+<p id="Referentie">
+
+Kline R.B. (2016). <i>Principles and practice of structural equation modeling.</i> Fourth edition. New York ; London: The Guilford Press. 
+
+Schmitz M., Luminet O., Klein O., Morbée S., Van den Bergh O., Van Oost P., Waterschoot J., Yzerbyt V. & Van Steenkiste M. (2022). Predicting vaccine uptake during COVID-19 crisis: A motivational approach. <i>Vaccine 40</i> (2), pp.288-297. doi: 10.1016/j.vaccine.2021.11.068
+
+</p>
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```
+
+```{js, echo=FALSE}
+// modal box
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+btn.onclick = function() {
+modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal) {
+modal.style.display = "none";
+}
+} 
+
+
+
+// modal box 2
+// Get the modal
+var modal2 = document.getElementById("myModal2");
+
+// Get the button that opens the modal
+var btn2 = document.getElementById("myBtn2");
+
+// Get the <span> element that closes the modal
+var span2 = document.getElementsByClassName("close")[1];
+
+// When the user clicks on the button, open the modal
+btn2.onclick = function() {
+modal2.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span2.onclick = function() {
+modal2.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal2) {
+modal2.style.display = "none";
+}
+} 
+
+
+
+
+
+// modal box 3
+// Get the modal
+var modal3 = document.getElementById("myModal3");
+
+// Get the button that opens the modal
+var btn3 = document.getElementById("myBtn3");
+
+// Get the <span> element that closes the modal
+var span3 = document.getElementsByClassName("close")[2];
+
+// When the user clicks on the button, open the modal
+btn3.onclick = function() {
+modal3.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span3.onclick = function() {
+modal3.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal3) {
+modal3.style.display = "none";
+}
+} 
+```
+
+

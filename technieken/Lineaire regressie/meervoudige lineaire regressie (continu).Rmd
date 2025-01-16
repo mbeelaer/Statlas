@@ -1,0 +1,254 @@
+---
+title: "Meervoudige lineaire regressie: continue predictor"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+```
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+<details>
+<summary>Referentie</summary>
+
+Het voorbeeld op deze pagina is geïnspireerd door een <a href='#Referentie'>studie van Mell et al. (2021)</a>. Om praktische en didactische redenen werden de hypothesen en de data aangepast. 
+</details>
+
+<br>
+
+------------------
+
+# Doel
+
+Lineaire regressie is een statistische techniek die je kan gebruiken om een hypothese te toetsen over het effect van een variabele (een onafhankelijke variabele of predictor) op een andere variabele (de afhankelijke variabele of uitkomst). In lineaire regressie is die afhankelijke variabele altijd continu, dus ten minste van intervalniveau.
+
+Zo goed als altijd zal je moeten controleren voor extra predictoren die het resultaat van de toetsing kunnen beïnvloeden.
+
+Op deze pagina kom je te weten hoe je zo'n hypothesetoetsing kan uitvoeren in het geval dat de predictor een continue variabele is.
+
+<br>
+
+----------------
+
+# De dataset
+
+```{r, echo=FALSE}
+
+dataVertrouwen <- read.csv("https://statlas.ugent.be/datasets/vertrouwen.csv")
+
+```
+
+
+De dataset `dataVertrouwen` bevat gegevens van `r dim(dataVertrouwen)[2]` variabelen geobserveerd bij `r dim(dataVertrouwen)[1]` Belgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `dataVertrouwen` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+dataVertrouwen <- read.csv("https://statlas.ugent.be/datasets/vertrouwen.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(dataVertrouwen) 
+
+```
+
+In de output van `str()` zie je inderdaad dat er `r dim(dataVertrouwen)[2]` variabelen zijn met telkens `r dim(dataVertrouwen)[1]` observaties. 
+
+<br>
+
+
+------------------------
+
+# Een lineair model specifiëren in R
+
+Je kan een model bouwen met de functie `lm()`. Het eerste argument van die functie is een formule waarin je specifieert welke variabelen je in het model wil opnemen:
+
+<ol>
+<li>een afhankelijke variabele
+<li>een tilde `~`
+<li>predictoren gescheiden door een `+`
+
+</ol>
+
+In het tweede argument bepaal je uit welk dataframe de variabelen komen. Hier is dat `dataVertrouwen`.
+
+Zo'n model kan je in een object met een eenvoudige naam stoppen.
+
+```{r}
+mijnModel <- lm(vertrouwen ~ sesKind + sesVolw + wrkls + geslacht, data = dataVertrouwen)
+```
+
+<br>
+
+-----------------------
+
+# Assumpties
+
+Hypothesetoetsing met lineaire regressie is enkel een bruikbare en betrouwbare techniek als aan een reeks voorwaarden is voldaan. Die moet je verifiëren vooraleer je met de interpretatie mag beginnen.
+
+De Gauss-Markovassumpties en de normaliteitsassumptie van de fouten^[De normaliteitsassumptie is hier minder van belang omwille van de steekproefgrootte en de centrale limietstelling.] kan je nagaan met `plot()`. Dit commando geeft je vier plots na elkaar. De eerste drie zijn relevant. In dit geval lijkt alles in orde en mag je verdergaan met de analyse. 
+
+Meer uitleg over de assumpties en deze plots vind je <a href='https://statlas.ugent.be/cursussen/Statistiek II syllabus 20-21.pdf#page=209' target=_blank>hier</a> (vanaf 9.9). 
+
+```{r, eval=FALSE}
+plot(mijnModel)
+```
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(mijnModel, which=1, main='1e GM-assumptie')
+plot(mijnModel, which=2, main='normaliteit van de fouten')
+plot(mijnModel, which=3, main='2e GM-assumptie: homoscedasticiteit')
+```
+
+<br>
+
+Een laatste aandachtspunt vooraleer je tot de hypothesetoetsing kan overgaan, is collineariteit. Dat is een situatie waarbij predictoren sterk gecorreleerd zijn. Met de functie `vif()` uit het R-package `car` kan je te weten komen of er in jouw model een probleem is met collineariteit. Als de variance inflation factor (VIF) bij elke variabele in de buurt van 1 ligt, mag je verder met de analyse. 
+
+```{r, warning=FALSE, message=FALSE}
+library(car)
+vif(mijnModel)
+```
+
+Meer uitleg over collineariteit vind je <a href='https://statlas.ugent.be/cursussen/Statistiek II syllabus 20-21.pdf#page=183' target='_blank'>hier</a> onder 9.4.5.
+
+<br>
+
+------------------------
+
+# Hypothese over een continue predictor
+
+Stel: je vermoedt dat iemands sociaal-economische status een invloed kan hebben op het vertrouwen in anderen.
+
+Om de sociaal-economische status concreet te observeren stel je in een enquête een reeks vragen (o.a. naar het inkomen). Op basis daarvan stel je een continue variabele `sesVolw` op die de huidige sociaal-economische status weergeeft. Dat is in dit geval de predictor.
+
+De afhankelijke variabele is `vertrouwen`. Ook deze continue variabele is gebaseerd op een reeks vragen uit een enquête.
+
+Daarnaast controleren we voor nog andere predictoren. Dat doen we omdat de conclusie over het bestaan van een effect van `sesVolw` op `vertrouwen` kan afhangen van de aanwezigheid van die extra predictoren in het model. De algemene regel is: neem elke predictor op waarvan je denkt dat die een invloed heeft op de afhankelijke variabele en/of dat die gerelateerd is aan de predictor die je onderzoekt (hier `sesVolw`).
+
+<br>
+
+## Nulhypothese en alternatieve hypothese {-}
+
+De nulhypothese $H_0$ stelt dat er geen effect is. Dit komt overeen met een regressiecoëfficiënt $\beta_1 = 0$.
+
+De alternatieve hypothese^[De alternatieve hypothese is hier tweezijdig. Dat is vaak het geval bij lineaire regressie, maar het is ook mogelijk om een eenzijdige alternatieve hypothese op te stellen en te toetsen.] is dan
+$H_a: \beta_1 \neq 0$.
+
+<br>
+
+## Significantieniveau {-}
+
+Net als bij elke hypothesetoets moet je een significantieniveau kiezen. Hier kiezen we voor de veelgebruikte waarde $\alpha = 0.05$. 
+
+<br>
+
+## Output van het model in R {-}
+
+Met de functie `summary()` kan je heel veel relevante informatie over het model oproepen. Als argument geef je gewoon het object `mijnModel`.
+
+```{r}
+
+summary(mijnModel)
+
+```
+
+De regressiecoëfficiënten vind je in de kolom `r colnames(summary(mijnModel)$coefficients)[1]`. De relevante coëfficiënt in dit voorbeeld is `r summary(mijnModel)$coefficients[3,1]`. Op basis van de data in deze steekproef verwacht je dus een waarde voor `vertrouwen` die `r summary(mijnModel)$coefficients[3,1]` hoger ligt wanneer iemands score voor `sesvolw` één eenheid hoger ligt.
+
+<br>
+
+## Conclusie {-}
+
+De coëfficiënt die hoort bij de sociaal-economische status `sesVolw` is `r coef(mijnModel)[3]`. Deze waarde is niet gelijk aan nul, maar de vraag is: is deze waarde -die afkomstig is van jouw steekproef- verschillend genoeg van 0 om te concluderen dat de coëfficiënt op populatieniveau verschillend is van 0? 
+
+Deze vraag kan je beantwoorden door de p-waarde te vergelijken met het eerder gekozen significantieniveau $\alpha$. De p-waarde vind je in de meest rechtse kolom genaamd `r colnames(summary(mijnModel)$coefficients)[4]`. 
+
+```{r, echo=FALSE}
+samenv <- summary(mijnModel)$coefficients
+is.sesVolw <- rownames(samenv)=='sesVolw'
+pwaarde <- samenv[is.sesVolw, 4]
+```
+
+
+In dit geval is de p-waarde gelijk aan $`r pwaarde`$, met andere woorden veel kleiner dan 0.05. Je kan dus de nulhypothese verwerpen ten voordele van de alternatieve hypothese. 
+
+<br>
+
+## Betrouwbaarheidsinterval {-}
+
+Je kan tot dezelfde conclusie komen op basis van het betrouwbaarheidsinterval van de regressiecoëfficiënt.
+
+```{r}
+confint(mijnModel, 'sesVolw')
+```
+
+De waarde 0 ligt niet in dit interval. 
+
+<br>
+
+-------------------
+
+# Visualiseren
+
+Het package `effects` laat je toe om eenvoudig visualisaties te maken van effecten in lineaire regressiemodellen.
+
+<br>
+
+```{r, eval=FALSE}
+install.packages('effects') # eenmalig het package installeren
+
+library(effects) # package laden voor gebruik
+
+plot(effect('sesVolw', mijnModel)) # let op de aanhalingstekens rond sesVolw
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(effects) # package laden voor gebruik
+
+plot(effect('sesVolw', mijnModel))
+```
+
+<br>
+
+-------------------
+
+# Voetnoten {#voetnoten}
+
+
+
+# Referenties
+
+<p id='Referentie'>Mell H., Safra L., Demange P., Algan Y., Baumard N. & Chevallier C. (2021). Early life adversity is associated with diminished social trust in adults. <i>Political Psychology</i>. doi: 10.1111/pops.12756</p>
+
+
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```

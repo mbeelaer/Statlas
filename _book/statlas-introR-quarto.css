@@ -1,0 +1,142 @@
+/* body {
+	font-size: 12pt;
+} */
+
+h1 {
+  color: #1e64c8;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 22px;
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+
+h2 {
+  color: #fb7e3a;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 20px;
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+
+h3 {
+  color: #fb7e3a;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 18px;
+  padding-bottom: 5px;
+}
+
+h4 {
+  font-size: 18px;
+  /* font-weight: bold; */
+}
+
+p {
+  font-family: Arial, Verdana, sans-serif;
+}
+
+a {
+  color: dodgerblue;
+}
+
+img {
+  border: 1px solid;
+  max-width: 100%;
+}
+
+a.link {
+  float: left;
+  display: inline;
+  width: 50%;
+  color: dodgerblue;
+}
+
+p.link_text {
+  color: #fb7e3a;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 18px;
+  float: left;
+  display: inline;
+  width: 50%;
+}
+
+span.filepath {
+  font-family: Courier;
+  display: inline;
+  white-space: nowrap; /*prevent wrapping of file path at the end of a line*/
+}
+
+div.banner {
+  border: 1px solid darkgray;
+  border-radius: 20px;
+  background-color: #a5c1b540;
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 30px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+div.banner > p {
+  margin: 20px;
+}
+
+.cell-code {
+  /* code chunks */
+  background-color: #1e64c820 !important;
+  color: #000000;
+  white-space: normal;
+  /* overflow-y: auto;
+  max-height: 45vh; */
+}
+
+.co {
+  /* comment in code chunk */
+  text-wrap: wrap;
+}
+
+.cell-output {
+  /* code chunks output */
+  background-color: #fb7e3a20;
+  color: #000000;
+  white-space: normal;
+  overflow-y: auto; /* Make code output which is longer than 'max-height' scrollable. Do not set to 'scroll' */
+  max-height: 55vh;
+  scrollbar-width: thin;
+  scrollbar-color: #00000015 #00000000;
+  border-radius: 8px;
+  padding: 12px 0 0 5px;
+}
+
+/* Blok openklikken */
+
+.details-summary {
+  color: green;
+}
+
+summary::marker {
+  color: green;
+  cursor: pointer;
+  width: fit-content;
+}
+
+summary:hover {
+  text-decoration: underline;
+}
+
+.meerInfo {
+  border: 4px rgb(0, 128, 0, 0.1);
+  /* background-color: rgb(0, 128, 0, .05); */
+  border-style: none none none solid;
+  /* border-bottom-left-radius: 5px; */
+  padding: 20px;
+  margin-left: 3px;
+  overflow-y: auto !important; /* Make code output which is longer than 'max-height' scrollable. Do not set to 'scroll' */
+  max-height: 100vh !important;
+}
+
+#welkom {
+  color: #1e64c8;
+  margin-top: 50px;
+  margin-bottom: 30px;
+  font-size: 24px;
+}

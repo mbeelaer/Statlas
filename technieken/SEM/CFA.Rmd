@@ -1,0 +1,441 @@
+---
+title: "Confirmatorische factoranalyse"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:/Users/mbeelaer/OneDrive - UGent/FPPW. Statlas/statlas_technieken.css
+    pandoc_args: 
+      - "--wrap=preserve"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+options(width=120) # output van sommige chunks wordt anders te snel gewrapt naar een volgende lijn
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(lavaan)
+```
+
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld.
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+<details>
+<summary>
+Referentie
+</summary>
+
+<p class="meerInfo"> Het voorbeeld op deze pagina is geïnspireerd door een <a href='#Referentie'>studie van Vanheule, Desmet, Groenvynck, Rosseel & Fontaine (2008)</a>. Om praktische en didactische redenen werden enkele aanpassingen aangebracht.
+</p>
+</details>
+
+<br>
+
+------------------------------------------------------------------------
+
+# Doel
+
+Veel verschijnselen zijn niet direct meetbaar. Zeker in de gedragswetenschappen is dat het geval. Denk bijvoorbeeld aan depressie[^0]: er is geen meetinstrument of "lat" voorhanden waarmee je iemands depressie rechtstreeks kan meten. Variabelen die niet rechtstreeks meetbaar zijn noemen we <b>latente variabelen</b>.
+
+[^0]: Andere voorbeelden zijn intelligentie, stress, welbevinden,...
+
+In factoranalyse gaat men ervan uit dat zulke latente variabelen toch meetbaar zijn door verschillende <b>indicatoren</b> te combineren. Dat zijn variabelen die wel rechtstreeks meetbaar zijn (ook <b>manifeste variabelen</b> genoemd). Elke indicator meet een aspect of een facet van de onderliggende latente variabele. 
+
+Een heel courant voorbeeld van zulke indicatoren zijn afzonderlijke vragen ("items") uit een vragenlijst.
+
+Je mag er natuurlijk niet zomaar vanuit gaan dat een reeks indicatoren samen een goede meting zijn voor een bepaalde latente variabele. Dat moet je eerst nagaan door de samenhang tussen indicatoren te onderzoeken. Het basisidee van factoranalyse is dat indicatoren die eenzelfde latente variabele meten, gecorreleerd zullen zijn (of anders gezegd, dat ze gedeelde variantie zullen hebben). Bijvoorbeeld personen met een hoge mate van depressiviteit zullen vermoedelijk vrij consistent hoog scoren voor een vraag die peilt naar hun gevoel van wanhoop, hoog voor een vraag naar hun zwartgallige gedachten, laag voor hun aantal activiteiten buitenshuis enzovoort. Mensen die niet of weinig depressief zijn zullen vermoedelijk vrij consistent omgekeerd scoren.
+
+<br>
+
+## "Confirmatorisch" {.unnumbered}
+
+Deze pagina demonstreert hoe je een <i>confirmatorische</i> factoranalyse (CFA) kan uitvoeren. Daarin is het de bedoeling om na te gaan of een <i>vooropgestelde</i> samenhang tussen indicatoren inderdaad in een dataset terug te vinden is. Je hebt in dit geval dus vooraf al een idee van 
+
+<ul>
+<li> welke indicatoren samenhoren en
+<li> welke en hoeveel latente variabelen je denkt te hebben gemeten.
+</ul>
+
+Het doel van CFA is om na te gaan of een vooropgestelde
+factorstructuur (= een aantal factoren, elk met hun eigen set van
+indicatoren) daadwerkelijk terug te vinden is in de data.[^namingfallacy]
+
+[^namingfallacy]: Een CFA kan niet helpen bij het bepalen van de juiste benaming van factoren. De analyse kan enkel bepalen of indicatoren gezamenlijk een "iets" meten. Het is aan jou, de vakspecialist, om te bepalen of die indicatoren metingen zijn van depressie of verveling of apathie of nog iets anders. 
+
+Die confirmatorische analyse staat tegenover een exploratieve aanpak (EFA). Daarin start je enkel vanuit een reeks indicatoren, zoals een vragenlijst. Hierbij vraag je je af welke indicatoren samen horen en dus mogelijk een factor vormen. In zo'n geval heb je vooraf geen hypothese over hoeveel en welke factoren uit de analyse tevoorschijn zullen komen.
+
+<br>
+
+## Hypothesen in Vanheule et al. (2008) {.unnumbered}
+
+De studie van Vanheule et al. (2008) voert onder meer[^2] een confirmatorische factoranalyse uit op de Beck Depression Inventory-II (BDI). Die vragenlijst meet de mate van depressie. De onderzoekers willen nagaan of er bepaalde subdimensies of deelaspecten van depressie kunnen worden gevonden in de BDI. Die subdimensies zijn in deze studie de latente variabelen. 
+
+[^2]: In Vanheule et al. (2008) toetst men veel verschillende modellen met 2, 3 of 4 factoren, met ook andere combinaties van items. Het ultieme doel is om uit te zoeken welk model het best past bij de data. 
+
+Zoals steeds in CFA hebben de onderzoekers op voorhand hypothesen over hoeveel en welke factoren gemeten worden met de vragenlijst. Concreet wordt nagegaan of er een somatisch-affectieve (`som.aff`) en een cognitieve (`cog`) factor terug te vinden zijn in de data. Deze latente variabelen zouden worden gemeten door respectievelijk 9 en 12 items. 
+
+Op het diagram hieronder zie je welke items zouden samenhoren en hoeveel/welke factoren men denkt terug te vinden in de data. 
+
+<details>
+<summary>Toon/verberg het diagram</summary>
+
+<div>
+<p style='margin: 0 5% 0 5%'>$\eta_1$ en $\eta_2$ stellen de twee latente variabelen voor. $Y_i$ zijn alle 21 indicatoren. Bij elke indicator hoort ook een $\epsilon_i$. Die slaat op de unieke variantie in elke indicator die niet gedeeld wordt met de andere indicatoren.</p>
+
+<br>
+
+<iframe src='https://statlas.ugent.be/img/CFA_TikZ.pdf' width=85% style='margin: 0 5% 0 5%' height=400px></iframe>
+</div>
+<br>
+
+</details>
+
+<br>
+
+------------------------------------------------------------------------
+
+# De dataset
+
+```{r, echo=FALSE}
+
+bdiKlinisch <- read.csv("https://statlas.ugent.be/datasets/bdi.items.klinisch.csv")
+
+```
+
+De dataset `bdiKlinisch` bevat gegevens van `r ncol(bdiKlinisch)` variabelen geobserveerd bij `r nrow(bdiKlinisch)` patiënten uit een Belgisch centrum voor geestelijke gezondheidszorg. 
+
+Merk op dat je bij CFA kan vertrekken van de ruwe data of van de covariantiematrix, maar niet van de correlatiematrix.
+
+De dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `bdiKlinisch` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+bdiKlinisch <- read.csv("https://statlas.ugent.be/datasets/bdi.items.klinisch.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. 
+
+```{r}
+
+str(bdiKlinisch) 
+
+```
+
+In de output van `str()` zie je inderdaad dat er `r ncol(bdiKlinisch)` variabelen zijn met telkens `r nrow(bdiKlinisch)` observaties.
+
+<br>
+
+------------------------------------------------------------------------
+
+# Het CFA-model specifiëren met `lavaan`
+
+Voor de analyse van een CFA-model gebruik je het package `lavaan`, wat staat voor <u>la</u>tent <u>va</u>riable <u>an</u>alysis. 
+
+```{r eval=FALSE}
+install.packages('lavaan') # eenmalig installeren
+library(lavaan) # het package laden bij de start van elke sessie
+```
+
+<br>
+
+## Verbanden tussen indicatoren en potentiële factoren vastleggen {-}
+
+Elke variabele `BDI1`, `BDI2`, enzovoort is mogelijk een indicator voor een onderliggende factor. Die plaats je bij elke latente variabele in overeenstemming met je hypothesen:
+
+```{r}
+mijnModel <- 'cog     =~ BDI1 + BDI2 + BDI3 + BDI5 + BDI6 + BDI7 + BDI8 + BDI9 + BDI14
+              som.aff =~ BDI4 + BDI10 + BDI11 + BDI12 + BDI13 + BDI15 + BDI16 + 
+                          BDI17 + BDI18 + BDI19 + BDI20 + BDI21
+             ' 
+```
+
+<br>
+
+Deze code weerspiegelt dus de hypothesen die de onderzoekers bij voorbaat hadden over welke indicatoren welke latente variabele meten. Het gelijkheidsteken `=` in combinatie met een tilde `~` kan je lezen als "wordt gemeten door". Dus kan je de eerste regel hierboven begrijpen als "de latente variabele `cog` wordt gemeten door de indicatoren `BDI1`, `BDI2`, `BDI3` enzovoort"[^3].
+
+[^3]: Of dat werkelijk het geval is zal natuurlijk moeten blijken uit de analyse. Op dit moment is het nog maar een hypothese!
+
+Let op de enkele aanhalingstekens `'` vooraan en achteraan! De modelsyntax vormt immers een "string" (een stuk tekst) in R.
+
+<br>
+
+## Parameters schatten {-}
+
+De functie `cfa()` voert alle berekeningen uit die je nodig hebt. Deze functie heeft de specificatie van het model nodig (object `mijnModel`) en de data.
+
+```{r, cache=TRUE}
+fit <- cfa(mijnModel, data=bdiKlinisch, se='robust', test='Satorra-Bentler')
+```
+
+<br>
+
+Een assumptie bij het schatten is dat de indicatoren $Y_i$ normaal verdeeld zijn. Als dat niet het geval is, dan zullen de resultaten vertekend zijn. Voor de puntschattingen van de factorladingen is de vertekening klein. Voor de standaardfouten ("standard errors") is er wel een betekenisvol verschil. Met het argument `se='robust'` bouw je een correctie in: de standaardfouten worden gecorrigeerd voor non-normaliteit van de data. Een gelijkaardige redenering gaat op voor de teststatistiek $\chi^2$. Die wordt gecorrigeerd voor non-normaliteit met het argument `test='Satorra-Bentler'`. 
+
+Ook goed om te weten: `cfa()` vult je modelspecificatie automatisch verder aan. Zo wordt er standaard voor gekozen dat de factoren kunnen correleren. Ook worden de residuele varianties van de indicatoren geschat. In de meeste gevallen zijn dat goede keuzes. Mocht je het toch anders willen[^4], dan kan je dit expliciet aangeven in jouw modelspecificatie. Bijvoorbeeld, volgende code legt vast dat de correlatie tussen factoren `som.aff` en `cog` toch 0 moet zijn.
+
+[^4]: Om theoretische, inhoudelijke redenen.
+
+```{r, eval=FALSE}
+mijnModel <- 'cog     =~ BDI1 + BDI2 + BDI3 + BDI5 + BDI6 + BDI7 + BDI8 + BDI9 + BDI14
+              som.aff =~ BDI4 + BDI10 + BDI11 + BDI12 + BDI13 + BDI15 + BDI16 + 
+                          BDI17 + BDI18 + BDI19 + BDI20 + BDI21
+              som.aff ~~ 0*cog
+             ' 
+
+```
+
+<br>
+
+In de rest van deze demonstratie zullen we wel toelaten dat `som.aff` en `cog` correleren.
+
+<br>
+
+------------------------------------------------------------------------
+
+# Resultaten tonen {.tabset .tabset-fade .tabset-pills}
+
+Om de resultaten te zien gebruik je de functie `summary()`. Het object `fit` voeg je toe als eerste argument. Met de andere argumenten kan je verder bepalen wat je precies in de output wil zien. (De output zelf wordt verderop besproken.)
+
+```{r, eval=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+<br>
+
+Enkele keuzes die je kan maken bij de `summary()`-functie zijn:
+
+<br>
+
+## `fit.measures = TRUE` {- #fitmaten}
+
+<div class='tabset_kader'>
+
+Indien `fit.measures = FALSE` - wat standaard het geval is - wordt enkel een $\chi^2$-toets uitgevoerd als maat voor de fit van het model. Deze toets is niet altijd voldoende om de model fit te beoordelen, zeker bij hele grote steekproeven.
+
+Het is aangeraden om bijkomende fitmaten te laten berekenen en te rapporteren in je publicatie, zoals CFI/TLI, RMSEA en SRMR. Al deze fitmaten zijn op een verschillende manier gevoelig voor misspecificatie van het model. Voeg deze fitmaten toe door eenvoudigweg het argument `fit.measures = TRUE` te gebruiken. De lezer van je onderzoek kan zo ook zelf een oordeel vellen over de fit.
+
+Meer uitgebreide uitleg over deze fitmaten vind je in:
+
+Kline, R. B. (2015). Principles and practice of structural equation modeling (Fourth
+Edition). New York: Guilford Press.
+
+</div>
+
+<br>
+
+## `standardized = TRUE` {-}
+
+<div class='tabset_kader'>
+
+Het is niet zomaar mogelijk om de factorladingen ([zie verderop](#factorladingen)) onderling te vergelijken en om uitspraken te doen over welke groter of kleiner is. Dat komt omdat de getalwaarde afhangt van de meeteenheid van de variabelen. 
+
+Met het argument `standardized = TRUE` krijg je een extra kolom `Std.all` in de output met schattingen voor gestandaardiseerde parameters (factorladingen, covarianties tussen factoren en residuele varianties van de indicatoren). 
+
+</div>
+
+<br>
+
+------------------------------------------------------------------------
+
+# Resultaten interpreteren
+
+Wat kan je leren uit de output van `summary(fit, fit.measures = TRUE, standardized = TRUE)`?
+
+<details>
+<summary> Toon/verberg de output van `summary()`
+</summary>
+
+```{r, echo=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+</details>
+
+<br>
+
+
+## Model fit {-}
+
+Of het model in zijn geheel goed fit met de data kan je achterhalen met behulp van de verschillende fitmaten.
+
+Je krijgt twee kolommen met fitmaten. De linkerkolom ("Standard") toont de fitmaten zonder correctie voor normaliteit; de rechterkolom ("Robust") toont de fitmaten na correctie voor normaliteit. Het zijn deze gecorrigeerde fitmaten in de rechterkolom die je moet interpreteren en rapporteren.
+
+Let op! De $\chi^2$-toets onder `Model Test User Model` interpreteren is hier anders dan wat je misschien intuïtief zou denken. Hier stelt de nulhypothese dat er een goede fit is. Dus als je een p-waarde kleiner dan 0.05 ziet, dan is de conclusie dat je de nulhypothese van goede fit moet verwerpen. Dat is in ons model het geval.
+
+Met het argument `fit.measures = TRUE` heb je naast de $\chi^2$-toets nog andere fitmaten opgevraagd. Er bestaat geen consensus over de precieze waarde vanaf dewelke je zeker kan spreken van een goede fit. Vuistregels voor deze fitmaten die in de literatuur voorkomen zijn:
+<ul>
+<li>CFI/TLI > 0.95 of > 0.90
+<li>RMSEA < 0.05, < 0.06 of < 0.08
+<li>SRMR < 0.06 of < 0.08
+</ul>
+
+In de rechterkolom met robuuste fitmaten zie je voor de CFI/TLI en voor de RMSEA nog eens twee "versies". De voorkeur gaat hier telkens naar de onderste van de twee, dus degene vermeld bij "Robust Comparative Fit Index", "Robust Tucker-Lewis Index" en "Robust RMSEA".
+
+Hier zijn de waarden voor deze fitmaten ook niet bijster goed.[^6] 
+
+In principe betekent dit dat je niet verder kan gaan met de analyse van de afzonderlijke parameters. Je kan bijvoorbeeld de factorladingen niet beoordelen. Je zou eerst op zoeken moeten gaan naar een beter passend model. Om de demonstratie verder te kunnen zetten zullen we er nu van uitgaan dat er wél een goede fit is.
+
+<br>
+
+[^6]: Mochten deze drie fitmaten allemaal wijzen op een goede fit, dan zou dat de conclusie zijn die we trekken - ook al wijst de $\chi^2$-toets eerder in de richting van slechte fit. [Zie ook eerder.](#fitmaten)
+
+### Modification indices {-}
+
+Als de fit van je model niet goed is, kan je eventueel de functie `modificationIndices()` gebruiken om suggesties te krijgen voor verbeteringen. In de kolom `mi` lees je welke bijkomende parameters een substantiële impact zouden hebben op de fit.^[Bij de verbanden die al in je model zitten, staat er logischerwijs een waarde 0 in deze kolom.]
+
+<div class="warning"> Hier moet je wel heel voorzichtig mee omspringen! Het is verleidelijk om je model fit te verbeteren door zonder nadenken wat extra connecties te maken tussen indicatoren en/of factoren. Eén van de problemen daarmee is dat elke extra connectie de fit van het model minstens een beetje zal verbeteren, ook als die connectie geen reële inhoudelijke betekenis heeft. Je mag een connectie enkel toevoegen als je er goede theoretische redenen voor hebt, als je echt reden hebt om te denken dat die relatie tussen indicatoren en/of factoren er in werkelijkheid zou kunnen zijn.</div>
+
+<br>
+
+```{r, eval=FALSE}
+modificationIndices(fit, 
+                    sort=TRUE, # Sorteer van grootste naar kleinste effect op de model fit (kolom 'mi')
+                    maximum.number=5L # Toon enkel de eerste vijf
+                    )
+```
+
+<details>
+<summary> Toon/verberg de output van `modificationIndices()`
+</summary>
+
+```{r, echo=FALSE}
+modificationIndices(fit, 
+                    sort=TRUE, # Sorteer van grootste naar kleinste effect op de model fit
+                    maximum.number=5L # Toon enkel de eerste vijf
+                    )
+```
+
+</details>
+
+<br>
+
+
+## Factorladingen {- #factorladingen}
+
+De factorladingen geven informatie over de samenhang tussen de indicatoren. Je kan ze interpreteren als regressiecoëfficiënten in een model waarbij de indicator de afhankelijke variabele is en de factor de onafhankelijke variabele.
+
+$$y_1 = \lambda_{11}\eta_1 + \epsilon_1$$
+
+<br>
+
+<div class='warning'>Niet vergeten: eigenlijk heeft het geen zin om factorladingen te interpreteren en beoordelen in een model dat in zijn geheel niet goed fit met de data.</div>
+
+<br>
+
+Onder `Latent Variables` vind je in de kolom `Std.all` de gestandaardiseerde factorladingen. Deze kan je met elkaar vergelijken om te bepalen welke groter en kleiner zijn.
+
+Een goede vuistregel stelt dat een gestandaardiseerde factorlading boven 0.70 moet liggen om de indicator als een degelijke meting te beschouwen. Boven 0.80 spreken we van een echt goede meting. In ons model zijn er maar weinig indicatoren die aan deze vuistregels voldoen.
+
+<br>
+
+## Covarianties tussen de factoren {-}
+
+Onder `Covariances` vind je in de kolom `Std.all` de correlatie tussen de factoren. Hier blijken de twee factoren in ons model sterk te correleren: 0.833. Het is dus erg twijfelachtig dat de twee constructen (de cognitieve en de somatisch-affectieve component van depressie) wel goed uit elkaar te houden zijn.
+
+<br>
+
+## Residuele varianties {-}
+
+Onder `Variances` vind je in de kolom `Std.all` de schattingen van de residuele variantie van elke indicator. Dat is de variantie van de indicator die <i>niet</i> gedeeld wordt met de andere indicatoren. Het vormt het spiegelbeeld van de factorladingen: als de factorlading hoog is, dan moet de residuele variantie laag zijn.
+
+Bijgevolg heeft het rapporteren van de residuele varianties hier geen meerwaarde. Het is wel aangeraden om na te gaan of er in de kolom `Estimate` geen negatieve varianties zijn. Dat zou immers een symptoom kunnen zijn van slechte fit, ook al zijn de fitmaten gunstig. 
+
+<br>
+
+------------------------------------------------------------------------
+
+# Visualiseren
+
+Met het package `lavaanPlot` kan je een CFA-model visualiseren. 
+
+```{r, eval=FALSE}
+install.packages("lavaanPlot") # eenmalig het package installeren
+
+library(lavaanPlot) # package laden voor gebruik
+
+lavaanPlot(model = fit, 
+           node_options = list(shape = "box", fontname = "Helvetica"), 
+           edge_options = list(color = "grey"), 
+           )
+```
+
+<details>
+<summary> Toon/verberg de plot</summary>
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4}
+library(lavaanPlot)
+
+lavaanPlot(model = fit, 
+           node_options = list(shape = "box", fontname = "Helvetica"), 
+           edge_options = list(color = "grey"), 
+           )
+```
+
+</details>
+
+<br>
+
+
+Een alternatief is het package `semPlot`. 
+
+```{r, eval=FALSE}
+
+install.packages('semPlot') # eenmalig het package installeren
+
+library(semPlot) # package laden voor gebruik
+
+semPaths(fit, layout='circle')
+
+```
+
+<details>
+<summary> Toon/verberg de plot</summary>
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4}
+library(semPlot)
+
+semPaths(fit, layout='circle')
+
+```
+
+</details>
+
+<br>
+
+------------------------------------------------------------------------
+
+# Voetnoten {#voetnoten}
+
+# Referenties
+
+<p id="Referentie">
+
+Vanheule S., Desmet M., Groenvynck H., Rosseel Y. & Fontaine J. (2008). The factor structure of the Beck Depression Inventory-II. An evaluation. <i>Assessment 15</i> (2). doi: 10.1177/1073191107311261
+
+</p>
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```

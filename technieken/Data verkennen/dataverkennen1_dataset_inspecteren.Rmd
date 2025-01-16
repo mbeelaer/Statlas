@@ -1,0 +1,124 @@
+---
+title: "Data verkennen: de dataset inspecteren"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+------------------------
+
+```{r, echo=FALSE}
+
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv") 
+
+```
+
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target='_blank'>hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+De bedoeling is om informatie te verkrijgen over de dataset: hoeveel data zit erin? Hoeveel variabelen en hoeveel observaties zijn er? Welke soorten variabelen? Zijn er ontbrekende data?
+
+<br>
+
+------------------
+
+# Voorbeeld
+
+De dataset `enquete` bevat gegevens van `r dim(enquete)[2]` variabelen geobserveerd bij `r dim(enquete)[1]` Amerikaanse studenten die een vak statistiek volgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `enquete` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv")
+```
+
+<br>
+
+
+------------------
+
+# Welk soort R-object is het?
+
+In R bestaan veel verschillende soorten objecten. Voorbeelden zijn vectoren, dataframes, lists en matrices.
+
+Data die van buitenaf worden geïmporteerd komen vaak als dataframe in R terecht - zoals in dit geval `enquete`. Je kan het type object opvragen met `class()`.
+
+```{r}
+class(enquete)
+```
+
+<br>
+
+Een dataset in de vorm van een dataframe is in veel gevallen ideaal: het is de meest overzichtelijke en handige manier om met data aan de slag te gaan in R.
+
+<br>
+
+------------------
+
+# Hoe groot is je dataset?
+
+De omvang van een dataset, als die netjes in een dataframe vervat zit, kan je makkelijk opvragen met de functie `dim()`.
+
+```{r}
+dim(enquete)
+```
+
+<br>
+
+Het eerste getal in de output slaat op het aantal rijen, dus in dit geval op het aantal bevraagde studenten. Je kan dit apart selecteren met `dim(enquete)[1]`.
+
+Het tweede getal gaat over het aantal variabelen dat geobserveerd werd. Met `dim(enquete)[2]` kan je deze waarde apart opvragen.
+
+<br>
+
+---------------------
+
+# Soorten variabelen in de dataset
+
+Met `str()` krijg je een overzicht van de variabelen in de dataset. Er staat telkens ook bij om welk type data het gaat: `chr`, `num`, `int`, enz.
+
+```{r}
+str(enquete)
+```
+
+<br>
+
+---------------------
+
+# Zijn er ontbrekende data?
+
+Mogelijk heeft niet elke bevraagde student op elke vraag van de enquête geantwoord. Dan zullen er in je dataset ontbrekende gegevens (in het Engels: "missing data") te vinden zijn. In R krijgen die een specifieke waarde, namelijk `NA`.
+
+De functie `is.na()` laat je toe om op zoek te gaan naar ontbrekende gegevens in je dataset.
+
+Meer informatie over ontbrekende data vind je via <a href="dataverkennen7_ontbrekende_data.html" target='_blank'>deze link</a>.
+
+
+
+
+

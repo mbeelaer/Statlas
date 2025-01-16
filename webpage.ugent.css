@@ -1,0 +1,105 @@
+/* Font UGent Panno */
+
+@font-face {
+    font-family: "Ugent-panno";
+    src: url('ugentpannotext-normal-web.ttf'), url('ugentpannotext-normal-web.eot');
+}
+
+
+/* Flexbox */
+
+.flexbox-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.horizontal {
+    flex-direction: row;
+}
+
+.vertical {
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-start;
+}
+
+.flexbox-container2 {
+    display: flex;
+    flex-direction: column;
+    background-color: #dfdfdf;
+    justify-content: flex-start;
+    /* alignment op main axis (zie flex-direction) kan ook center of flex-end of space-between of space-around*/
+    align-items: flex-start;
+    /* alignment op secondary axis kan ook center of stretch */
+    /* align-content is er ook nog*/
+}
+
+.flexbox-item {
+    margin: 10px;
+    flex-shrink: 0;
+    flex-basis: 15%;
+}
+
+.flexbox-item-5 {
+    min-height: 100px;
+    align-self: flex-end;
+    /* overrides algemene alignment */
+    flex: 1 0 10px;
+    /* equivalent aan resp. flex-grow, flex-shrink en flex-basis */
+}
+
+.titel {
+    font-size: xx-large;
+    color: #fff;
+    padding: 10px;
+}
+
+span {
+    font-family: Ugent-panno, Arial, Helvetica, sans-serif;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+}
+
+p {
+    font-family: Ugent-panno, Arial, Helvetica, sans-serif;
+    justify-content: center;
+    align-items: center;
+}
+
+img {
+    width: fit-content;
+    height: fit-content;
+}
+
+a.navlink {
+    float: left;
+    font-size: large;
+    text-decoration: underline;
+    display: inline;
+    width: 20%;
+    color: #fff;
+    padding-left: 20px;
+}
+
+.nav-venster {
+    background-color: #1e64c8;
+    font-family: Ugent-panno, Arial, Verdana, sans-serif;
+    flex-basis: 30px;
+    flex-grow: 4;
+    height: 120px;
+}
+
+.logo {
+    flex-basis: 15px;
+    flex-grow: 1;
+    max-height: 120px;
+}
+
+.hoofdtekst {
+    background-color: #fff;
+    font-family: Arial, Verdana, sans-serif;
+    width: fit-content;
+}

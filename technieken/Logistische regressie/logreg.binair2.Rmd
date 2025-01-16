@@ -1,0 +1,741 @@
+---
+title: "Binaire logistische regressie met interactie-effecten"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    css: statlas_logreg.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+options(width=120)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(fmsb) # Nagelkerke
+library(pROC) # AUC
+library(effects)
+library(glmtoolbox) # Hosmer-Lemeshow test
+library(formattable)
+```
+
+```{r, echo=FALSE, include=FALSE}
+setwd('C:/Users/mbeelaer/OneDrive - UGent/FPPW. Statlas/Logistische regressie')
+
+barrieres <- try(read.csv('https://statlas.ugent.be/datasets/barrieres.csv'))
+if("try-error" %in% class(barrieres)) barrieres <- read.csv('barrieres.csv')
+
+```
+
+
+\
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target="_blank">handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+Het voorbeeld op deze pagina is afkomstig van een <a href='#Referentie'>studie van Van Nieuwenhove & De Wever (2023)</a>. Er zijn kleine wijzigingen aangebracht om didactische redenen. De studie is ook uitgebreider dan wat hier wordt gedemonstreerd.
+
+
+\
+
+------------------
+
+# Doel
+
+Logistische regressie is een statistische techniek die toelaat om een categorische uitkomstvariabele te modelleren in functie van een reeks predictoren. De predictoren kunnen zowel continu als categorisch zijn. Een eerste voorbeeld van een dergelijk model vind je <a href='https://statlas.ugent.be/technieken/Logistische%20regressie/logreg.binair1.html' target='_blank'>elders op Statlas</a> terug.  
+
+Het is mogelijk om interacties tussen predictoren toe te voegen aan een logistisch regressiemodel en om deze te toetsen. De termen "interactie" en "moderatie" worden beide gebruikt. Daarover gaat deze demonstratie.
+
+<i>Binaire</i> logistische regressie verwijst naar de specifieke situatie waarin de categorische uitkomstvariabele exact twee waarden ("niveaus") kan aannemen. Er bestaat ook multinomiale logistische regressie, waarbij de uitkomst meer dan twee waarden kan aannemen. 
+
+Logistische regressie maakt deel uit van een familie van statistische technieken die gezamenlijk "Veralgemeend Lineair Model" worden genoemd (in het Engels: "Generalized Linear Model").
+
+\
+
+
+## Het onderzoek van Van Nieuwenhove & De Wever (2023) {-}
+
+In deze demonstratie belichten we een deel van de studie van Van Nieuwenhove & De Wever (2023). Zij proberen te verklaren waarom mensen wel of niet deelnemen aan opleidingen in het volwassenenonderwijs. Hun onderzoek is in belangrijke mate gebaseerd op een courante theorie in de gedragswetenschappen: de theorie van gepland gedrag (afgekort TGG; in het Engels: "theory of planned behavior"). Kort samengevat stelt deze theorie dat gedrag een gevolg is van de intentie om dat gedrag te stellen, waarbij die intentie op zijn beurt het gevolg is van drie grote groepen van oorzaken:
+
+<ol>
+<li> Perceptie van controle over gedrag (in het Engels: "Perceived behavioral control")
+<li> Perceptie van sociale normen (in het Engels: "Perceived social norms")
+<li> Attitudes
+</ol>
+
+\
+
+Een van de onderzoeksvragen die Van Nieuwenhove & De Wever (2023) zich stelden was of de intentie om wel of niet een opleiding te volgen in het volwassenenonderwijs kan worden verklaard met behulp van deze drie variabelen^[Elk van deze drie variabelen is berekend door meerdere items uit een enquête te combineren.]. Het is duidelijk dat de intentie om wel of niet deel te nemen aan een opleiding een categorische afhankelijke variabele is met twee niveaus. In een eerste fase was het de bedoeling om die te modelleren in functie van de drie grote variabelen uit de TGG. Om die onderzoeksvraag met die predictoren te bestuderen gebruikten de onderzoekers binaire logistische regressie. Hoe dat werkt vind je in <a href='https://statlas.ugent.be/technieken/Logistische%20regressie/logreg.binair1.html' target='_blank'>een andere demonstratie op Statlas</a>.
+
+\
+
+Van Nieuwenhove & De Wever (2023) bouwen daarna voort op de TGG met als doel om tekortkomingen in de bestaande wetenschappelijke literatuur over volwassenenonderwijs te remediëren. Tot nu toe is er nog geen studie verschenen die uitdrukkelijk personen met verschillende opleidingsniveaus vergelijkt in de context van de TGG en volwassenenonderwijs. Dat is nochtans een interessante piste omdat mensen met een lager opleidingsniveau mogelijk meer psychosociale barrières ervaren, als gevolg van negatievere eerdere ervaringen met onderwijs. De relatie tussen de TGG-predictoren en de beslissing om een opleiding te volgen zou daardoor verschillend kunnen zijn. De auteurs onderzoeken deze hypothese door interactie-effecten (ook moderatie-effecten genoemd) te toetsen. Dat is wat we op <b>deze pagina</b> zullen demonstreren.
+
+\
+
+Van Nieuwenhove & De Wever (2023) gaan in hun studie nog een stap verder en onderzoeken ook de rol van psychosociale barrières bij de intentie om een opleiding te volgen. Dat is het belangrijkste doel van hun artikel (dat kan je al afleiden uit de titel). Dergelijke barrières zijn onderbelicht in de literatuur en dus de moeite waard om te onderzoeken. Meer bepaald vermoeden ze dat eerdere ervaringen met onderwijs een psychosociale barrière zouden kunnen vormen om als volwassene opnieuw een opleiding te volgen. Voor dit alles gebruiken zij een model met mediatie. Dat demonstreren we hier niet.
+
+\
+
+
+------------------
+
+
+# Dataset & packages
+
+## De dataset laden {-}
+
+De data die voor de demonstratie worden gebruikt zijn online beschikbaar. Gebruik de volgende code om de data in te laden in RStudio.
+
+```{r, eval=FALSE}
+barrieres <- read.csv('https://statlas.ugent.be/datasets/barrieres.csv')
+```
+
+\
+
+De dataset `barrieres` bevat de gegevens van `r dim(barrieres)[1]` respondenten die een vragenlijst invulden. Deze bestond uit `r dim(barrieres)[2]` vragen. 
+
+\
+
+
+## Lijst met variabelen {-}
+
+<ul><li>`intentie` "Ik ben van plan om tijdens de volgende 12 maand deel te nemen aan een vorm van levenslang leren." De antwoordopties "nee" en "ja" werden gecodeerd als 0 en 1.
+<li>`pcg` Perceptie van controle over het eigen gedrag
+<li>`psn` Perceptie van sociale normen
+<li>`attitudes` Attitudes tegenover het gedrag
+<li>`opl.niveau` Opleiding gehercodeerd in 3 categorieën (1/2/3 = "Laagopgeleid"/"Middenopgeleid"/"Hoogopgeleid")
+<li>`leeftijd` Een controlevariabele
+<li>`geslacht` Een controlevariabele
+</ul>
+
+\
+
+Je ziet dat sommige van deze variabelen categorisch zijn. Het is belangrijk dat de categorische predictoren van datatype `factor` zijn. Anders zal R bijvoorbeeld de numerieke codes (`1`, `2` en `3`) van variabele `opl.niveau` interpreteren als echte getallen, wat niet correct is.   
+
+```{r}
+barrieres$opl.niveau <- factor(barrieres$opl.niveau)
+barrieres$geslacht <- factor(barrieres$geslacht)
+```
+
+Om na te gaan dat de omzetting gelukt is kan je het datatype opvragen met de functie `class()`.
+
+```{r}
+class(barrieres$opl.niveau)
+```
+
+\
+
+Merk ook de controlevariabelen `leeftijd` en `geslacht` op. Die voegt men toe om meer zekerheid in te bouwen dat de effecten uit de onderzoeksvraag (waarin men dus het meest geïnteresseerd is) accuraat kunnen worden geschat. 
+
+\
+
+
+## Packages {-}
+
+Om een logistisch regressiemodel te fitten heb je genoeg aan het basispakket van R ("base R"). Er zijn geen packages nodig. Om effecten te visualiseren zullen we wel gebruik maken van het package `effects`. Je kan het eventueel al installeren. Verderop zullen we uitdrukkelijk vermelden wanneer we dat package gebruiken.
+
+```{r, eval=FALSE}
+install.packages('effects')
+```
+
+\
+
+
+------------------
+
+# Onderzoeksvraag en aanpak
+
+De hoofdbedoeling is om te achterhalen of er in de data bewijs te vinden is voor interactie-effecten tussen enerzijds het opleidingsniveau en anderzijds de drie predictoren van de TGG. De aanleiding hiervoor was een vermoeden dat de relatie tussen de TGG-predictoren en de intentie om een opleiding te volgen niet hetzelfde is voor mensen met een verschillend opleidingsniveau.
+
+De strategie om op deze onderzoeksvraag een antwoord te bieden bestaat uit een modelvergelijking aan de hand van een "Likelihood Ratio Test" (LRT). Daarbij ga je een model met een reeks predictoren vergelijken met een ander model dat dezelfde predictoren bevat plus een aantal andere predictoren (en/of effecten). We spreken van "geneste modellen".
+
+In dit voorbeeld is er sprake van een logistische regressiemodel met vijf predictoren. In een diagram ziet dit model er als volgt uit (klik op de afbeelding om te vergroten):
+
+<img id="myBtn" class="modalBtn" src='modeldiagram2a.PNG' width=240>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src='modeldiagram2a.PNG' alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+\
+
+
+Dit model is genest in een ander model dat dezelfde vijf predictoren bevat, maar daarnaast ook drie interactie-effecten. Deze zijn in het onderstaande diagram aangeduid als rode pijlen. Dit tweede model noemt men "complexer" dan het eerste model.
+
+<img id="myBtn2" class="modalBtn" src='modeldiagram2b.PNG' width=240>
+
+<!-- The Modal -->
+<div id="myModal2" class="modal">
+
+  <!-- Modal content -->
+<div class="modal-content">
+
+<div class="modal-header">
+<span class="close">&times;</span>
+<!-- <h2 style="color:black">"Full SEM"</h2> -->
+</div>
+
+<div class="modal-body">
+<img src='modeldiagram2b.PNG' alt='Oops, something went wrong' style="border: none">
+<br>
+
+</div>
+</div> 
+</div>
+
+<br>
+
+\
+
+De regressievergelijking van dit laatste model ziet er als volgt uit.
+
+$$
+\begin{align*}
+log\left(\frac{\pi}{1-\pi}\right) = & \beta_0 + \beta_1 \: \times pcg + \beta_2 \: \times psn + \beta_3 \: \times attitudes \\
+& + \beta_4 \: \times opl.niveau2 + \beta_5 \: \times opl.niveau3 \\
+& + \beta_6 \: \times leeftijd  + \beta_7 \: \times geslacht1 \\
+& + \beta_8 \: \times pcg \times opl.niveau2 + \beta_9 \: \times pcg \times opl.niveau3 \\
+& + \beta_{10} \: \times psn \times opl.niveau2 + \beta_{11} \: \times psn \times opl.niveau3 \\
+& + \beta_{12} \: \times attitudes \times opl.niveau2 + \beta_{13} \times attitudes \times opl.niveau3
+\end{align*}
+$$
+
+$\pi$ staat daarbij voor de kans op de intentie om een opleiding te volgen. $\frac{\pi}{1-\pi}$ is de odds op de intentie om een opleiding te volgen. De logaritme van de odds wordt ook de logit genoemd.
+
+De modelvergelijking is een hypothesetoets. De nulhypothese bij deze toets luidt dat de twee geneste modellen niet van elkaar verschillen. In dat geval is geen enkel van de interactie-effecten aanwezig. De alternatieve hypothese luidt dat de twee geneste modellen wel van elkaar verschillen. Dan is er ten minste één interactie-effect.
+
+Het is zo goed als zeker dat de modellen minstens een beetje van elkaar zullen verschillen in jouw steekproef. Met de modelvergelijking ga je na of het geloofwaardig is dat deze verschillen aan toeval te wijten zijn. 
+
+Terzijde, in dit voorbeeld gebruiken we modelvergelijking om drie verschillende interactie-effecten ineens te toetsen, maar dezelfde methode is even goed bruikbaar om bijvoorbeeld één interactie-effect te toetsen.
+
+\
+
+------------------
+
+# Visuele exploratie
+
+Je kan meteen een eerste indicatie krijgen van het antwoord op de onderzoeksvraag door enkele eenvoudige plots aan te maken. Hier is de onderzoeksvraag of het effect van `pcg`, `psn` en/of `attitudes` op `intentie` verschillend is voor verschillende waarden van `opl.niveau`. 
+
+Met de functie `levels()` kan je de waarden van `opl.niveau` oproepen. De bedoeling is dus om het effect van de drie predictoren te visualiseren, eerst voor `opl.niveau` gelijk aan `1`, dan voor `opl.niveau` gelijk aan `2` en ten slotte voor `opl.niveau` gelijk aan `3`.
+
+Om uit `barrieres` enkel de observaties te selecteren waar `opl.niveau` gelijk is aan `1`, gebruik je de volgende conditie.
+
+```{r}
+opl.laag <- barrieres$opl.niveau == '1' # let op het dubbele gelijkheidsteken!
+```
+
+Met de vector `opl.laag` kan je nu uit `barrieres` de rijen halen die aan deze conditie voldoen.
+
+```{r, eval=FALSE}
+barrieres[opl.laag,]
+```
+
+Dit is een "nieuw" dataframe dat je kan gebruiken als dataset in de functie `boxplot()`. 
+
+Het argument `horizontal=TRUE` doet de horizontale en de verticale as van plaats wisselen. Dat is niet echt nodig, maar het zorgt ervoor dat de predictor op de horizontale as komt en de uitkomst op de verticale as, zoals je waarschijnlijk gewoon bent.
+
+Het argument `ylim` legt de minimum- en maximumwaarde op de horizontale as vast. Als je dit niet specifieert bestaat het risico dat sommige plots bijvoorbeeld maar van 2 tot 6 gaan, omdat er geen extreme waarden in de dataset aanwezig zijn. Plots met verschillende assen zouden moeilijker op het zicht te vergelijken zijn, dus dat wil je liever vermijden.
+
+```{r}
+boxplot(pcg ~ intentie,
+        data=barrieres[opl.laag,], 
+        horizontal=TRUE,
+        ylim=c(1,7)
+        )
+```
+
+Uit deze plot kan je afleiden dat bij lagere waarden van `pcg` de intentie vooral gelijk is aan `0` en bij hogere waarden zie je dat de intentie eerder gelijk is aan `1`. 
+
+\
+
+Die eerste plot leert je nog niets over de onderzoeksvraag. Daarvoor moet je het effect van `pcg` bij `opl.niveau` gelijk aan `1` vergelijken met het effect bij `opl.niveau` gelijk aan `2` en `3`. Je hebt dus ook plots nodig voor die condities. Daarna moet je dit allemaal nog eens herhalen voor de predictoren `psn` en `attitudes`! Je hebt dus in totaal 3 $\times$ 3 $=$ 9 plots nodig: er zijn immers drie predictoren die elk (zouden) interageren met `opl.niveau`, dat drie niveaus heeft. De code voor elk van die plots is heel gelijkaardig. Klik op de link om de <a href='https://statlas.ugent.be/technieken/Logistische%20regressie/logreg.binair2.9boxplots.R' target='_blank'>code voor alle plots</a> te zien.
+
+Je ziet de 9 plots hieronder.
+
+De vraag die je hier visueel probeert te beantwoorden is deze: is het effect van `pcg`, `psn` en/of `attitudes` verschillend bij verschillende waarden van `opl.niveau`? Visueel verkennen van het antwoord houdt in dat je nagaat of er in minstens één kolom verschillende effecten te zien zijn tussen de drie plots in die kolom.
+
+```{r, echo=FALSE}
+opl.laag <- barrieres$opl.niveau=='1'
+opl.midden <- barrieres$opl.niveau=='2'
+opl.hoog <- barrieres$opl.niveau=='3'
+
+par(mfcol=c(3,3))
+# pcg
+boxplot(pcg ~ intentie, 
+        data=barrieres[opl.laag,], 
+        horizontal=TRUE, 
+        main='Bij laag opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(pcg ~ intentie, 
+        data=barrieres[opl.midden,], 
+        horizontal=TRUE, 
+        main='Bij middelmatig opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(pcg ~ intentie, 
+        data=barrieres[opl.hoog,], 
+        horizontal=TRUE, 
+        main='Bij hoog opleidingsniveau',
+        ylim=c(1, 7)
+        )
+
+# psn
+boxplot(psn ~ intentie, 
+        data=barrieres[opl.laag,], 
+        horizontal=TRUE, 
+        main='Bij laag opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(psn ~ intentie, 
+        data=barrieres[opl.midden,], 
+        horizontal=TRUE, 
+        main='Bij middelmatig opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(psn ~ intentie, 
+        data=barrieres[opl.hoog,], 
+        horizontal=TRUE, 
+        main='Bij hoog opleidingsniveau',
+        ylim=c(1, 7)
+        )
+
+# attitudes
+boxplot(attitudes ~ intentie, 
+        data=barrieres[opl.laag,], 
+        horizontal=TRUE, 
+        main='Bij laag opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(attitudes ~ intentie, 
+        data=barrieres[opl.midden,], 
+        horizontal=TRUE, 
+        main='Bij middelmatig opleidingsniveau',
+        ylim=c(1, 7)
+        )
+boxplot(attitudes ~ intentie, 
+        data=barrieres[opl.hoog,], 
+        horizontal=TRUE, 
+        main='Bij hoog opleidingsniveau',
+        ylim=c(1, 7)
+        )
+par(mfcol=c(1,1))
+```
+
+\
+
+Het antwoord is niet 100% duidelijk. Er zijn misschien wel kleine verschillen, maar zou dit niet aan toeval te wijten kunnen zijn? Het ziet eruit als een twijfelgeval. Meer duidelijkheid zal je hier pas krijgen door een formele significantietoets uit te voeren.
+
+\
+
+------------------
+
+# Modelspecificatie in R
+
+Om de onderzoeksvraag te beoordelen ga je dus twee geneste modellen vergelijken. Daarvoor zal je in R elk model specifiëren, fitten en opslaan in een object. In een volgende stap zal je de modellen vergelijken met behulp van de functie `anova()`.
+
+Eerst het minder complexe model, zonder interacties. Je vertelt erbij uit welk dataframe de gegevens moeten komen (argument `data`) en welk soort analyse je wil uitvoeren (argument `family`). Dat laatste is nodig omdat `glm` ook andere soorten analyses dan logistische regressie aankan. Je kiest voor `link = "logit"` omdat je een logaritme van de odds wil modelleren.
+
+```{r}
+formula.mdl <- 'intentie ~ pcg + psn + attitudes + leeftijd + opl.niveau + leeftijd + geslacht'
+mdl <- glm(formula = formula.mdl, data = barrieres, family = binomial(link = 'logit'))
+```
+
+Je ziet dat hier in twee stappen wordt gewerkt. Dit is enkel voor de leesbaarheid van de code.
+
+\
+
+Vervolgens specifieer en fit je het complexere model. 
+
+```{r}
+formula.mdl.interactie <- 'intentie ~ pcg*opl.niveau + psn*opl.niveau + attitudes*opl.niveau + leeftijd + geslacht'
+```
+
+Je gebruikt de asterisk `*` om interactie-effecten te coderen. Merk op dat alle variabelen die in een interactie-effect betrokken zijn, automatisch ook als hoofdeffect aan het model worden toegevoegd wanneer je `*` gebruikt. Dat is een goede zaak: zonder die hoofdeffecten in het model loop je het risico dat je schattingen van de interactie-effecten fout zijn.
+
+De modelspecificatie kan ook wat korter. Zo hoef je `opl.niveau` geen drie keer te schrijven.
+
+```{r}
+formula.mdl.interactie <- 'intentie ~ (pcg + psn + attitudes)*opl.niveau + leeftijd + geslacht'
+```
+
+Het model fitten doe je opnieuw met `glm()`.
+
+```{r}
+mdl.interactie <- glm(formula = formula.mdl.interactie, data = barrieres, family = binomial(link = 'logit'))
+```
+
+\
+
+--------------------------
+
+# Modelvergelijking
+
+Wanneer de modellen eenmaal gefit zijn kan je overgaan tot de modelvergelijking aan de hand van een "likelihood ratio test" (LRT). Dat is een hypothesetoets:
+
+<ul>
+<li> De nulhypothese stelt dat beide modellen niet van elkaar verschillen (in technische termen: er is geen verschil in "deviance").
+<li> De alternatieve hypothese stelt dat het complexere model beter is (er is wel een verschil in "deviance").
+</ul>
+
+\
+
+```{r}
+anova(mdl, mdl.interactie, test='LRT')
+```
+
+\
+
+```{r, echo=FALSE}
+mdl.cmprsn <- anova(mdl, mdl.interactie, test='LRT')
+p.value <- mdl.cmprsn$`Pr(>Chi)`[2]
+```
+
+\
+
+Met een p-waarde van `r round(p.value, 4)` kan je de nulhypothese niet verwerpen op het 5% significantieniveau. Er is met andere woorden geen bewijs gevonden voor de bewering dat het model met interactie-effecten beter is.
+
+\
+
+
+## Antwoord op de onderzoeksvraag {-}
+
+Dankzij de modelvergelijking heb je meteen een antwoord op de onderzoeksvraag. Er is geen bewijs gevonden voor de vooropgestelde interactie-effecten. 
+
+In wat volgt zullen we, louter voor de demonstratie, toch verder werken met het model met interactie-effecten. 
+
+\
+
+--------------------------
+
+# Het model beoordelen
+
+Soms vragen onderzoekers zich af wat de verklarende kracht is van een model in zijn geheel. Om dat te achterhalen in de context van logistische regressie bestaan verschillende technieken die al <a href='https://statlas.ugent.be/technieken/Logistische%20regressie/logreg.binair1.html#7_Het_model_beoordelen' target='_blank'>elders op Statlas</a> aan bod komen. Hier zullen we dit dus niet herhalen. 
+
+\
+
+---------------------------
+
+# Uitgebreide output opvragen
+
+Met de functie `summary()` kan je veel relevante informatie over het model opvragen. 
+
+```{r}
+summary(mdl.interactie)
+```
+
+\
+
+De parameterschattingen onder `Estimate` zijn interessant omdat die het (eventuele) effect van de predictoren kwantificeren. Die kan je vervolgens gebruiken om ook predicties te genereren. Verderop in deze demonstratie lees je dus ...
+
+<ul>
+<li> hoe je parameterschattingen kan interpreteren (natuurlijk met speciale aandacht voor interactie-effecten)
+<li> hoe je predicties kan genereren aan de hand van diverse waarden voor de predictoren.
+</ul>
+
+\
+
+
+--------------------------
+
+# Parameterschattingen interpreteren 
+
+In logistische regressie zijn het niet de waarden van de uitkomstvariabele zelf die gemodelleerd worden in functie van predictoren, maar wel de logaritmes van de odds. In dit voorbeeld gaat het om de odds op het hebben van de intentie om een opleiding te volgen. Voor een uitgebreidere uitleg over logaritmes, odds en oddsratio's, kan je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=229' target='_blank'>in deze syllabus</a> terecht.
+
+In de output van `summary(mdl.interactie)` vind je een kolom `Estimate`. Daarin staan parameterschattingen. De interpretatie van deze waarden is niet zo eenvoudig. Wat je wel kan doen is deze kolom met parameterschattingen omrekenen naar odds en oddsratio's. De kolom maakt deel uit van het object `mdl.interactie` en kan je afzonderlijk selecteren met `mdl.interactie$coef`. Vervolgens geef je dit aan de functie `exp()`. 
+
+```{r}
+exp(mdl.interactie$coef)
+```
+
+\
+
+Deze odds en oddsratio's zijn makkelijker te interpreteren.^[We interpreteren hier alle schattingen zonder rekening te houden met significantie.] 
+
+Onder `(Intercept)` vind je de geschatte odds voor iemand met waarde 0 voor alle predictoren.
+
+```{r, echo=FALSE}
+pcg.coef <- formattable::formattable(exp(mdl.interactie$coef["pcg"]), digits=4, format='f')
+```
+
+Er zijn ook parameters voor de hoofdeffecten. Bijvoorbeeld, bij `pcg` zie je `r pcg.coef` staan. Dit is een oddsratio, net zoals in een model zonder interactie-effecten, maar let op! De interpretatie is niet helemaal dezelfde als in een model zonder interactie-effecten. In dit model is er namelijk een interactie-effect tussen `pcg` en `opl.niveau`. Dat betekent dat het effect van `pcg` op `intentie` verschillend is naargelang de waarde van `opl.niveau`. Het getal `r pcg.coef` stelt het effect voor van `pcg` op de odds van `intentie`, maar enkel voor het referentieniveau van de categorische variabele `opl.niveau`. 
+
+Dus wanneer `opl.niveau` de waarde `1` heeft (wat staat voor "laagopgeleid"), verwachten we voor elke eenheid toename van `pcg` dat de odds op `intentie` veranderen met factor `r pcg.coef`. Deze oddsratio is `r ifelse(pcg.coef>1, print("groter dan 1"), print("kleiner dan 1"))` , dus we verwachten dat de odds op `intentie` `r ifelse(pcg.coef>1, print("groter"), print("kleiner"))` wordt naarmate `pcg` hoger is. 
+
+```{r, echo=FALSE}
+pcg.x.opl.niveau2.coef <- formattable::formattable(exp(mdl.interactie$coef["pcg:opl.niveau2"]), digits=4, format='f')
+pcg.x.opl.niveau2.effect <- pcg.coef * pcg.x.opl.niveau2.coef
+```
+
+
+Wat is dan het effect van `pcg` voor andere niveaus van `opl.niveau`? Bijvoorbeeld het effect van `pcg` voor `opl.niveau` gelijk aan `2` kan je bekomen door `r pcg.coef` te vermenigvuldigen met `r pcg.x.opl.niveau2.coef`. Het resultaat van deze vermenigvuldiging `r pcg.x.opl.niveau2.effect` is ook een oddsratio. 
+
+Wanneer `opl.niveau` de waarde `2` heeft, verwachten we voor elke eenheid toename van `pcg` dat de odds op `intentie` veranderen met factor `r pcg.x.opl.niveau2.effect`. Deze oddsratio is groter dan 1, dus we verwachten dat de odds op `intentie` groter wordt naarmate `pcg` hoger is, maar in mindere mate dan wanneer `opl.niveau` gelijk is aan `1`. 
+
+\
+
+------------------
+
+# Visualiseren
+
+Om de geschatte effecten te visualiseren kan je het `effects`-package gebruiken. Dat moet je eenmalig installeren en daarna bij elke R-sessie laden.
+
+```{r, eval=FALSE}
+install.packages('effects')         # eenmalig
+library(effects)                    # bij elke sessie
+```
+
+\
+
+Omdat de onderzoeksvraag gaat over interactie-effecten is het de bedoeling om het effect van bijvoorbeeld `pcg` afzonderlijk te zien voor `opl.niveau` gelijk aan `1`, `2` en `3`. De functie `predictorEffect()` zorgt daar vanzelf voor. Je geeft enkel de predictor in kwestie en het modelobject `mdl.interactie`. De functie "weet" dat `pcg` in je model betrokken is in een interactie met `opl.niveau` en genereert vanzelf een plot voor elk niveau van die variabele. 
+
+```{r}
+effects.pcg <- predictorEffect('pcg', mdl.interactie)
+plot(effects.pcg)
+```
+
+\
+
+Op de horizontale as van elke plot verschijnen de verschillende waarden die de predictor kan aannemen. De verticale as toont de kans (dus niet de log(odds) of de odds!) op `intentie` voor elke waarde van de predictor. Kansen aflezen op de verticale as is niet noodzakelijk interessant. De plot toont immers de lineaire relatie tussen de predictor en de uitkomst `intentie` <i>voor specifieke vaste waarden van de overige predictoren</i> (zoals `attitudes` of `leeftijd`). Voor andere waarden van de overige predictoren zal de rechte hoger of lager liggen. Het interessante aan een dergelijke plot is de helling van de rechte. Die vertelt je iets over de relatie tussen de predictor en de uitkomst.
+
+Merk ook op dat de verticale as herschaald is. De streepjes bij 0.1 en 0.2 liggen niet even ver uit elkaar als de streepjes tussen 0.2 en 0.3, enzovoort. Dat komt omdat in een logistisch regressiemodel de kans geen lineaire functie is van de predictoren.
+
+\
+
+Gelijkaardige plots voor `psn` en `attitudes` bekom je op analoge wijze. 
+
+\
+
+---------------------------
+
+# Predicties
+
+Dankzij de schattingen die we hebben bekomen in de output van `summary(mdl.interactie)` is het nu mogelijk om predicties te berekenen. Voor een persoon met bepaalde waarden voor de predictoren kan je berekenen wat de geschatte waarde is voor de uitkomstvariabele. 
+
+\
+
+## Log-schaal of logit-schaal {-}
+
+In logistische regressie modelleren we niet `intentie` (de uitkomstvariabele) zelf in functie van de predictoren, maar wel de logaritme van de odds op `intentie`. Wanneer je waarden voor de predictoren in de regressievergelijking stopt, dan kom je natuurlijk waarden voor de logaritme van de odds ("logit") uit, niet voor de uitkomstvariabele zelf. Voor meer uitleg kan je opnieuw terecht <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=229' target='_blank'>in deze syllabus</a>.
+
+Je kan de logaritme van de odds zelf berekenen door waarden voor de predictoren in te vullen in de regressievergelijking.
+
+$$
+\begin{align*}
+log\left(\frac{\pi}{1-\pi}\right) = & \beta_0 \\
+& + \beta_1 \: \times pcg \\
+& + \beta_2 \: \times psn \\
+& + \beta_3 \: \times attitudes \\
+& + \beta_4 \: \times opl.niveau2 \\
+& + \beta_5 \: \times opl.niveau3 \\
+& + \beta_6 \: \times leeftijd \\
+& + \beta_7 \: \times geslacht1 \\
+& + \beta_8 \: \times pcg \times opl.niveau2 \\
+& + \beta_9 \: \times pcg \times opl.niveau3 \\
+& + \beta_{10} \: \times psn \times opl.niveau2 \\
+& + \beta_{11} \: \times psn \times opl.niveau3 \\
+& + \beta_{12} \: \times attitudes \times opl.niveau2 \\
+& + \beta_{13} \times attitudes \times opl.niveau3
+\end{align*}
+$$
+
+
+\
+
+Je kan dit makkelijk opvragen in R voor alle observaties in je dataset. Gebruik daarvoor de functie `predict()`.
+
+```{r, eval=FALSE}
+predict(mdl.interactie)
+```
+
+```{r, echo=FALSE}
+predicties <- predict(mdl.interactie)
+predicties
+```
+
+\
+
+Bijvoorbeeld, voor de 54e observatie in de dataset kan je aflezen dat $log\left(\frac{\pi}{1-\pi}\right) = `r predicties["54"]`$. Als je dat wil kan je altijd narekenen dat dit inderdaad de juiste geschatte log(odds) is voor een persoon met volgende waarden voor de predictoren:
+
+```{r, echo=FALSE}
+print(barrieres["54",c("pcg", "psn", "attitudes", "opl.niveau", "leeftijd", "geslacht" )], row.names=FALSE)
+```
+
+\
+
+De log(odds) is niet zo interessant om te rapporteren. Je rekent predicties op de log(odds)-schaal best om naar odds of naar kansen. Hieronder tonen we hoe je dat kan doen.
+
+\
+
+## Odds-schaal {-}
+
+Predicties op de odds-schaal kan je bekomen door het getal $e$ te verheffen tot de macht $\beta_0 + \beta_1 \: pcg+ \beta_2 \: psn+ \beta_3 \: attitudes$.
+
+Opnieuw kan je dit laten berekenen voor alle observaties in je dataset. Het commando `predict(model1)` leverde log(odds) op. Om hieruit de odds te berekenen in R gebruik je de functie `exp()`. 
+
+```{r}
+log.odds <- predict(mdl.interactie)
+exp(log.odds) 
+```
+
+\
+
+Als je dat wil kan je dit opnieuw zelf narekenen voor een bepaalde observatie, bijvoorbeeld nummer 54.
+
+```{r, echo=FALSE}
+odds <- exp(log.odds)
+```
+
+
+$$\frac{\pi}{1-\pi} = e^{`r log.odds["54"]`} \approx `r odds["54"]`$$
+
+\
+
+
+## Kansen {-}
+
+Als je eenmaal de odds hebt, dan is het ook mogelijk om de voorspelde kansen $\pi$ te berekenen. 
+
+$$
+\begin{align*}
+odds &= \frac{\pi}{1-\pi} \\
+ & \Updownarrow \\
+\pi &= \frac{odds}{1+odds}
+\end{align*}
+$$
+\
+
+In R kan je op basis van die formule een object (hier `kansen`) maken dat voor elke observatie de voorspelde kans bevat.
+
+```{r}
+kansen <- odds/(1+odds)
+```
+
+\
+
+Je kan de kansen ook veel sneller bekomen via de functie `predict()`, door een extra argument mee te geven, of nog korter via de functie `fitted()`.
+
+```{r, eval=FALSE}
+kansen <- predict(mdl.interactie, type="response")
+# of
+kansen <- fitted(mdl.interactie)
+```
+
+\
+
+------------------
+
+
+# Referenties
+
+<p id='Referentie'>Van Nieuwenhove L. & De Wever B. (2023). Psychosocial barriers to adult learning and the role of prior learning experiences: A comparison based on educational level <i>Adult Education Quarterly</i>, doi: 10.1177/07417136231147491</p>
+
+
+------------------
+
+# Voetnoten
+
+\
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```
+
+
+
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```
+
+
+```{js, echo=FALSE}
+// modal box 1
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+btn.onclick = function() {
+modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal) {
+modal.style.display = "none";
+}
+} 
+
+
+// modal box 2
+// Get the modal
+var modal2 = document.getElementById("myModal2");
+
+// Get the button that opens the modal
+var btn2 = document.getElementById("myBtn2");
+
+// Get the <span> element that closes the modal
+var span2 = document.getElementsByClassName("close")[1];
+
+// When the user clicks on the button, open the modal
+btn2.onclick = function() {
+modal2.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span2.onclick = function() {
+modal2.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+if (event.target == modal2) {
+modal2.style.display = "none";
+}
+} 
+
+```

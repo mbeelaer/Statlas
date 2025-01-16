@@ -1,0 +1,291 @@
+---
+title: "Data verkennen: twee continue variabelen"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+```
+
+<br>
+
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+Het is een goed idee om een dataset te verkennen, vooraleer je er allerlei statistische technieken op loslaat. R biedt een heel uitgebreid gamma aan functies om dat te doen. 
+
+De output van die functies dient vaak niet om te publiceren. Het is vooral de bedoeling om zelf meer inzicht te krijgen in de variabelen in je dataset en de samenhang tussen die variabelen.
+
+Op deze pagina vind je hoe je de samenhang tussen 2 continue variabelen kan beschrijven en visueel voorstellen.
+
+<br>
+
+```{r, echo=FALSE}
+
+Caschool <- read.csv("https://statlas.ugent.be/datasets/Caschool2.csv")  # er staat al een Caschool.csv op da.ugent.be
+
+```
+
+
+-------------------
+
+# De dataset
+
+De dataset Caschool bevat gegevens van `r dim(Caschool)[2]` variabelen geobserveerd bij `r dim(Caschool)[1]` scholen uit Californië.
+
+Deze dataset kan je inladen met onderstaande code. De data kan je best meteen in een object `Caschool` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+Caschool <- read.csv("https://statlas.ugent.be/datasets/Caschool2.csv") 
+```
+
+<br>
+
+Het object `Caschool` is een dataframe dat alle data voor alle variabelen bevat.
+
+```{r}
+class(Caschool) # Denk eraan dat R hoofdlettergevoelig is!
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(Caschool) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(Caschool)[2]` variabelen zijn met telkens `r dim(Caschool)[1]` observaties (hier dus: scholen). 
+
+<br>
+
+
+Variabelen die je interesseren kan je hier eventueel al in een apart object opslaan.
+
+```{r}
+
+logavginc <- Caschool$logavginc
+expnstu <- Caschool$expnstu
+
+```
+
+<br>
+
+------------------
+
+# Correlatie
+
+Met `cor()` kan je Pearsons correlatiecoëfficiënt berekenen. Dit is een maat voor de lineaire samenhang van twee continue variabelen.
+
+```{r}
+
+cor(logavginc, expnstu)
+
+```
+
+<br>
+
+<!-- De uitkomst `r cor(logavginc, expnstu)` getuigt van een lineair verband dat aan de zwakke kant is, maar anderzijds toch niet helemaal afwezig is. Het kan de moeite zijn om dit verder te onderzoeken. -->
+
+<!-- <br> -->
+
+Met dezelfde functie kan je ook andere maten van samenhang berekenen. Gebruik daarvoor het argument `method="kendall"` of `method="spearman"`.
+
+<br>
+
+Meer uitleg over associatiematen vind je <a href='https://statlas.ugent.be/cursussen/Statistiek I syllabus 20-21.pdf#page=118' target='_blank'>hier</a> vanaf 4.4.
+
+<br>
+
+------------------
+
+# Twee variabelen visualiseren
+
+Een belangrijk onderdeel van het verkennen van data bestaat erin om een visuele voorstelling te maken van de data. Hier tonen we hoe je dat kan doen in het R-basispakket<a href="#footnote1"><sup>1</sup></a>.
+
+
+## De functie `pairs()` {-}
+
+De functie `pairs()` laat toe om veel variabelen ineens paarsgewijs (vandaar uiteraard de naam) te visualiseren. Hier kiezen we voor de 3e tot en met de 7e kolom/variabele van de dataset.
+
+```{r, error=TRUE}
+pairs(Caschool[,3:7], lower.panel=NULL)
+```
+
+<br>
+
+
+
+<!-- Oeps. Dit werkt niet. De foutmelding zegt dat er een niet-numerieke variabele is opgenomen. Welke variabele zou het kunnen zijn? Jij wilde de 2e tot en met de 7e variabele van `Caschool` opnemen in de figuur. Met `str()` zag je eerder al van elke variabele welk type het was. Hier is het `grspan`, van het type `chr`, die voor de foutmelding zorgt. -->
+
+<!-- Sommige functies, zoals `pairs()` werken niet met het datatype `chr`, maar wel met het type `factor`. Variabelen van het type `chr` kan je omzetten naar type `factor`. -->
+
+<!-- ```{r} -->
+
+<!-- Caschool$grspan <- factor(Caschool$grspan) -->
+
+<!-- ``` -->
+
+<!-- <br> -->
+
+<!-- Dezelfde code zal nu wel werken. -->
+
+<!-- ```{r, error=TRUE} -->
+<!-- pairs(Caschool[,2:7], lower.panel=NULL) -->
+<!-- ``` -->
+
+<br>
+
+De output van `pairs()` kan handig zijn voor een eerste visuele indruk, maar als je wat meer detail wil kan je beter afzonderlijke scatterplots maken. 
+
+<!-- <br> -->
+
+<!-- De variabele `grspan` (als type `factor`!) komt verderop terug, dus je kan die ook al opslaan in een apart object. -->
+
+<br>
+
+
+## De scatterplot {-}
+
+Twee continue variabelen visualiseren kan eenvoudig met `plot()`. Je ziet hieronder meteen ook hoe je de titel van de plot en de titels van de assen kan invullen zoals je zelf wil.
+
+```{r}
+
+plot(x=logavginc, y=expnstu,
+     main="Titel van de figuur",
+     xlab="Naam van de x-as",
+     ylab="Naam van de y-as")
+
+```
+
+<br>
+
+### Best passende rechte {-}
+
+Aan de scatterplot kan je een best passende rechte toevoegen met `abline`.<a href='#footnote2'><sup>2</sup></a> De helling hiervan is gebaseerd op de correlatiecoëfficiënt van Pearson.
+
+```{r}
+plot(x=logavginc, y=expnstu,
+     main="Titel van de figuur",
+     xlab="Naam van de x-as",
+     ylab="Naam van de y-as")
+
+abline(lm(expnstu ~ logavginc), col="green") # Let op de volgorde van de variabelen!!! 
+```
+
+<br>
+
+### Vloeiende lijn {-}
+
+De interpretatie van Pearsons correlatiecoëfficiënt is enkel zinvol als er inderdaad een lineair verband is tussen de variabelen. Dat kan je visueel nagaan met een scatterplot. Je kan meteen een best passende rechte tekenen (groen), maar nu voeg je ook een vloeiende lijn toe (rood).
+
+```{r}
+plot(logavginc, expnstu)
+
+abline(lm(expnstu ~ logavginc), col="green")
+
+smooth <- loess(expnstu ~ logavginc)
+i <- order(logavginc)
+lines(logavginc[i], predict(smooth)[i], col="red")
+
+```
+
+<br>
+
+De vloeiende rode lijn, ook gekend als een 'loesscurve', toont een iets ander patroon. Aan de uiterste linker- en rechterkant ligt de rode curve een eindje boven de groene rechte. Anderzijds zijn daar maar heel weinig datapunten, dus die 'buiging' betekent misschien niet veel.
+
+<br>
+
+### Datapunten kleuren {-}
+
+Het kan interessant zijn om de datapunten in je scatterplot in te kleuren volgens de waarde van een andere, categorische variabele, bv. `grspan`.
+
+```{r}
+grspan <- factor(Caschool$grspan) # grspan moet van type 'factor' zijn, niet type 'chr'
+```
+
+<br>
+
+Eerst moet je achterhalen hoeveel kleuren je nodig hebt. Dat stemt overeen met het aantal niveau's van de categorische variabele. De functie `nlevels()` zegt je hoeveel het er zijn. 
+
+```{r}
+
+nlevels(grspan)
+
+```
+
+<br>
+
+De code hieronder laat je toe om de datapunten in te kleuren.
+
+```{r, error=TRUE}
+
+plot(x=logavginc, y=expnstu,
+     main="Uitgaven per student t.o.v. inkomen",
+     xlab="Log gemiddeld inkomen in het district",
+     ylab="Uitgaven per student",
+     col=c("red", "blue")[grspan] # Let op: grspan moet van type factor zijn
+     )
+
+```
+
+<br>
+
+Omdat je extra informatie toevoegt aan de plot voeg je best ook een legende toe. 
+
+```{r}
+
+plot(x=logavginc, y=expnstu, 
+     main="Uitgaven per student t.o.v. inkomen",
+     xlab="Log gemiddeld inkomen in het district",
+     ylab="Uitgaven per student",
+     col=c("red", "blue")[grspan] # Let op: grspan moet van type factor zijn
+     )
+
+legend("bottomright", inset=0.01, legend=levels(grspan), fill=c("red", "blue"))
+
+```
+
+<br>
+
+----------------------
+
+# Voetnoten
+
+<ol>
+<li>
+<p id='footnote1'> Er bestaan ook R-packages die speciaal ontworpen zijn voor datavisualisatie. Het meest gebruikte heet 'ggplot2'.</p>
+
+<li>
+<p id='footnote2'> De scatterplot blijft beschikbaar voor toevoegingen -zoals een legende, lijnen, vlakken of tekst- nadat de functie `plot()` is uitgevoerd. Dit kan bijvoorbeeld met de functies `abline()`, `polygon()` of `text()`. De plot blijft beschikbaar zolang je geen andere code uitvoert die niets met de plot zelf te maken heeft.</p>
+
+
+</ol>
+
+<br>

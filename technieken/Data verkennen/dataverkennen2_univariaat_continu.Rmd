@@ -1,0 +1,257 @@
+---
+title: "Data verkennen: één continue variabele beschrijven"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\mbeelaer\Documents\FPPW. Statlas\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+------------------------
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+Het is een goed idee om een dataset te verkennen, vooraleer je er allerlei statistische technieken op loslaat. R biedt een heel uitgebreid gamma aan functies om dat te doen. 
+
+De output van die functies dient vaak niet om te publiceren. Het is vooral de bedoeling om zelf meer inzicht te krijgen in de variabelen in je dataset.
+
+Hier focussen we op de beschrijving en visuele voorstelling van één continue variabele. 
+
+<br>
+
+
+```{r, echo=FALSE}
+
+Caschool <- read.csv("https://statlas.ugent.be/datasets/Caschool2.csv") 
+
+```
+
+-------------------
+
+# De dataset
+
+De dataset Caschool bevat gegevens van `r dim(Caschool)[2]` variabelen geobserveerd bij `r dim(Caschool)[1]` scholen uit Californië.
+
+Deze dataset kan je inladen met onderstaande code. De data kan je best meteen in een object `Caschool` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+Caschool <- read.csv("https://statlas.ugent.be/datasets/Caschool2.csv") 
+```
+
+<br>
+
+Het object `Caschool` is een dataframe dat alle data voor alle variabelen bevat.
+
+```{r}
+class(Caschool) # Denk eraan dat R hoofdlettergevoelig is!
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(Caschool) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(Caschool)[2]` variabelen zijn met telkens `r dim(Caschool)[1]` observaties (hier dus: scholen). 
+
+<br>
+
+------------------
+
+# Eén variabele selecteren
+
+Met het symbool <strong>$</strong> kan je één variabele uit een dataset selecteren. Hier selecteren we `teachers`, dat wil zeggen het aantal leerkrachten in een school.
+
+```{r, eval=FALSE}
+Caschool$teachers 
+```
+
+<br>
+
+Het is vaak handig om deze variabele in een nieuw object te steken. Dit is vooral de moeite waard als je nog heel vaak naar deze variabele zal moeten verwijzen. Het kan ook interessant zijn als de oorspronkelijke variabele een moeilijk te begrijpen naam heeft, zoals in dit dataframe bijvoorbeeld `expnstu`.
+
+```{r}
+leraren <- Caschool$teachers
+```
+
+<br>
+
+Vanaf nu kan je `leraren` typen om naar deze variabele te verwijzen in plaats van `Caschool$teachers`.
+
+<br>
+
+Met `class()` kan je achterhalen om welk type variabele het gaat.
+
+```{r}
+class(leraren)
+```
+
+<br>
+
+
+-------------------
+
+# Een continue variabele verkennen {.tabset .tabset-fade .tabset-pills}
+
+<!-- Verwijzing naar cursus Statistiek I? -->
+
+Met de functie `summary()` krijg je al heel wat informatie over de variabele.
+
+```{r}
+summary(leraren)
+```
+
+<br>
+
+Vaak is het wel nodig of interessant om deze informatie afzonderlijk te laten berekenen, bijvoorbeeld om er weer verdere berekeningen mee uit te voeren. Hieronder zie je hoe dat kan voor enkele centrummaten en spreidingsmaten. Daarnaast vind je ook een tabblad over hoe je een continue variabele visueel kan voorstellen.
+
+<br>
+
+## Centrummaten {-}
+
+<br>
+
+<div class="tabset_kader">
+
+Centrummaten geven je een centrale waarde waarrond de waarden van een variabele liggen. In R bestaan functies om zulke centrummaten makkelijk te berekenen.
+
+<br>
+
+### Gemiddelde {-}
+
+```{r}
+mean(leraren)
+```
+
+<br>
+
+### Mediaan {-}
+
+```{r}
+median(leraren)
+```
+
+<br>
+
+Gemiddelde en mediaan liggen opvallend ver uiteen. Dat is al een interessante vaststelling die je iets kan leren. (Kijk ook onder tabblad 'Visueel voorstellen')
+
+</div>
+
+<br>
+
+----------------------
+
+## Spreidingsmaten {-}
+
+<br>
+
+<div class="tabset_kader">
+
+Spreidingsmaten leren je hoe ver de waarden van een variabele uit elkaar liggen. Ook hiervoor bestaan uiteraard functies in R.
+
+<br>
+
+### Variantie {-}
+
+```{r}
+var(leraren)
+```
+
+<br>
+
+### Standaarddeviatie {-}
+
+```{r}
+sd(leraren) # De standaarddeviatie is de vierkantswortel van de variantie.
+```
+
+</div>
+
+<br>
+
+--------------------
+
+## Visueel voorstellen {-}
+
+<br>
+
+<div class="tabset_kader">
+
+Boxplots kunnen in één oogopslag een idee geven van de verdeling van de variabele. Meer uitleg vind je <a href="https://statlas.ugent.be/cursussen/boxplot.pdf" target="_blank">hier</a>.
+
+<br>
+
+```{r}
+boxplot(leraren)
+```
+
+<br>
+
+De onder- en bovengrens van de 'doos' stemmen overeen met respectievelijk het eerste en derde kwartiel. Die waarden kwam je eerder al tegen bij de output van de functie `summary()`.
+
+Het valt op dat de verdeling van `leraren` behoorlijk scheef is. Veruit de meeste scholen tellen (veel) minder dan ongeveer 200 leerkrachten. Dat verklaart waarom de mediaan gelijk is aan `r round(median(leraren), 2)`. Anderzijds zijn er wel een aantal heel hoge uitschieters. Dit zijn scholen met heel veel leerkrachten, tot zelfs `r max(leraren)`. Deze (relatief weinige) scholen trekken het gemiddelde (`r round(mean(leraren), 2)`) omhoog, wat verklaart waarom het zoveel hoger is dan de mediaan.
+
+<br>
+
+Een alternatieve manier van visualiseren is via een histogram. 
+
+```{r}
+hist(leraren)
+```
+
+<br>
+
+Zie je het verband tussen de boxplot en het histogram? Kan je er dezelfde informatie uit afleiden als bij de boxplot?
+
+```{js, echo=FALSE}
+function antwoord() {
+  window.alert('Boxplot en histogram tonen allebei dat de meeste scholen minder dan 200 leerkrachten tellen, dat de verdeling erg scheef is, dat er uitlopers zijn tot ongeveer 1500 leerkrachten,... In een histogram is het moeilijker om met het blote oog de mediaan of het 1e en het 3e kwartiel te bepalen.')
+}
+```
+
+<button type="button" onclick="antwoord()">Klik hier voor het antwoord</button>
+
+</div>
+
+<br>
+
+-----------------------
+
+
+
+
+
+
+
+

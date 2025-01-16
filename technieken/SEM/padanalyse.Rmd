@@ -1,0 +1,575 @@
+---
+title: "Padanalyse met mediatie en moderatie"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\mbeelaer\Documents\FPPW. Statlas\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(lavaan)
+library(lavaanPlot)
+library(semPlot)
+```
+
+```{r, echo=FALSE}
+
+verloop <- read.csv('https://statlas.ugent.be/datasets/verloopLeerkrachten.csv')
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, cache=TRUE}
+mijnModel <- '
+             # Directe effecten
+               intentieVertrek ~ c1*POFit
+               intentieVertrek ~ b2*perceptieWerk
+               intentieVertrek ~ b3*perceptieWerkXjobTevr
+ 
+             # Mediatie
+               jobTevr ~ a1*POFit + GOK + LFTD + JAARSCH + GESL
+               intentieVertrek ~ b1*jobTevr + GOK + LFTD + JAARSCH + GESL
+ 
+             # Conditioneel Indirect Effect van PO fit op Intention to move 
+             #  voor bepaalde waarden van Job satisfaction (met 1.02 de SD van PEONDC)
+               CIE1 := a1*(b1+b3*-1.02)
+               CIE2 := a1*(b1+b3*0)   
+               CIE3 := a1*(b1+b3*1.02)
+ 
+              # Direct and Indirect Effect van PO fit op Intention to move
+               indirect:= a1*b1
+               direct:= c1
+               total: = c1 + (a1*b1)'
+
+fit <- sem(model=mijnModel, data=verloop, se = "bootstrap")
+
+```
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target="_blank">handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+<details>
+<summary><span>Referentie</span></summary>
+
+<p class='meerInfo'>Het voorbeeld op deze pagina is afkomstig van een <a href='#Referentie'>studie van Vekeman, Devos, Valcke & Rosseel (2017)</a>. Er zijn lichte wijzigingen aangebracht om didactische redenen.</p>
+</details>
+
+<br>
+
+------------------
+
+# Doel
+
+Padanalyse is een statistische techniek die je kan gebruiken om de onderliggende mechanismen bloot te leggen die een fenomeen kunnen verklaren.
+
+<a href='#Referentie'>Vekeman et al. (2017)</a> probeerden onder meer te verklaren waarom leerkrachten de intentie hebben om het onderwijs te verlaten. 
+
+Anders dan bij lineaire regressie gaan we niet enkel op zoek naar het onafhankelijke effect van een reeks predictoren op een afhankelijke variabele. In padanalyse zijn we geïnteresseerd in een complexer systeem van variabelen. Kenmerkend is bijvoorbeeld dat er variabelen kunnen voorkomen die verklaard worden door andere variabelen, maar die zelf ook als verklaring fungeren van nog een andere variabele.
+
+Over de terminologie die hoort bij padanalyse (bv. exogene en endogene variabelen, padcoëfficiënten), zie <a href='https://statlas.ugent.be/cursussen/padanalyse_slides.pdf#page=22' target='_blank'>hier</a>, in het bijzonder op slides 22 tot en met 27.
+
+Vekeman et al. (2017) hadden een vermoeden van waarom leerkrachten de intentie hebben om het onderwijs te verlaten. Ze dachten dat een mediatie-effect en een moderatie-effect samen een goede verklaring zouden kunnen bieden voor het vertrek van leerkrachten.
+
+<br>
+
+## Mediatie {-}
+
+De P-O fit ("hoe goed passen leerkracht en school bij elkaar?") vormt een belangrijk deel van de verklaring. Deze fit zou een effect (a1) hebben op de jobtevredenheid, die op zijn beurt een effect (b1) zou hebben op de intentie om het onderwijs te verlaten. Dit deel van de verklaring zie je in onderstaande figuur. Er wordt natuurlijk ook rekening gehouden met een eventueel direct effect (c1) van `POFit` op `intentieVertrek`, dat dus niet via `jobTevr` gaat. 
+
+<img src="https://statlas.ugent.be/img/padanalyse_mediation_only.png" alt="Vekeman mediation only">
+
+<br>
+
+Meer informatie over mediatie vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_mediatie.pdf' target='_blank'>hier</a>.
+
+<br>
+
+## Moderatie (interactie) {-}
+
+De onderzoekers denken verder dat het effect van de jobtevredenheid op de intentie om het onderwijs te verlaten niet even groot is in alle omstandigheden. Specifiek gaan ze na of dit effect afhankelijk zou kunnen zijn (b3) van een andere variabele: de opties die leerkrachten denken te hebben om werk te vinden buiten het onderwijs (`perceptieWerk`). 
+
+Het model met mediatie én moderatie zie je hieronder. Alle pijlen hebben opnieuw een label gekregen (a1, b1,...).
+
+<img src="https://statlas.ugent.be/img/padanalyse_volledig.png" alt="Vekeman hypothesen">
+
+In dit model wordt jobtevredenheid (`jobTevr`) verklaard door P-O fit (`POFit`), maar tegelijk is jobtevredenheid zelf ook een verklaring voor de intentie om het onderwijs te verlaten (`intentieVertrek`). Dit laatste hangt af van de opties voor ander werk (`perceptieWerk`). Merk op dat het model ook een direct effect (b2) van `perceptieWerk` op `intentieVertrek` bevat. Zonder dat laatste bestaat de mogelijkheid dat we een verkeerde conclusie trekken over het moderatie-effect.
+
+<br>
+
+Meer informatie over moderatie (interactie) vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=61' target='_blank'>hier</a> vanaf p.61.
+
+<br>
+
+## Controlevariabelen {-}
+
+Ten slotte bevat het model nog een reeks controlevariabelen (niet getoond op de figuur hierboven). Deze worden opgenomen omdat ze mogelijk gerelateerd zijn aan andere variabelen in het model en dus conclusies zouden kunnen beïnvloeden. Je vindt ze in het overzicht hieronder.
+
+<br>
+
+## Overzicht variabelen {-}
+
+<details>
+<summary>Alle variabelen in deze demonstratie</summary>
+
+<ul>
+<li>`intentieVertrek`: Intentie van leerkrachten om het onderwijs te verlaten 
+<li>`POFit`: "Person-Organisation fit", de mate waarin een individu en organisatie bij elkaar passen
+<li>`perceptieWerk`: "Perceived employability", de mate waarin een leerkracht denkt buiten het onderwijs werk te kunnen vinden
+<li>`jobTevr`: "Job satisfaction", tevredenheid met de job
+<li>`perceptieWerkXjobTevr`: product van `perceptieWerk` en `jobTevr`, om het interactie-effect te modelleren
+<li>`GESL`: geslacht (controlevariabele)
+<li>`LFTD`: leeftijd (controlevariabele)
+<li>`JAARSCH`: jaren ervaring in de school (controlevariabele)
+<li>`GOK`: sociaal-economische status van de school (controlevariabele)
+</ul>
+
+</details>
+
+<br>
+
+## Wat kan je leren uit padanalyse? {-}
+
+Met een padanalysemodel kan je verschillende zaken proberen te achterhalen. Belangrijke doelen van de analyse zijn
+
+<ul>
+<li>om te achterhalen of het model in zijn geheel goed fit met de data, 
+<li>om alle padcoëfficiënten te schatten en
+<li>om te toetsen of deze coëfficiënten significant verschillen van nul.
+</ul>
+
+De volgorde is hier belangrijk! Het heeft geen zin om conclusies te trekken over het al dan niet significant zijn van de afzonderlijke padcoëfficiënten in een model dat in zijn geheel niet goed fit met de data.
+
+<br>
+
+----------------
+
+# Packages en dataset
+
+Voor de analyse van een padmodel kan je functies uit het `lavaan`-package gebruiken.
+
+```{r, eval=FALSE}
+install.packages("lavaan") # eenmalig installeren
+library(lavaan) # bij de start van elke sessie
+```
+
+<br>
+
+De dataset bevat gegevens van `r dim(verloop)[2]` variabelen geobserveerd bij `r dim(verloop)[1]` leerkrachten.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `verloop` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+verloop <- read.csv('https://statlas.ugent.be/datasets/verloopLeerkrachten.csv')
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r, eval=FALSE}
+
+str(verloop) 
+
+```
+
+In de output van `str()` kan je zien dat er inderdaad `r dim(verloop)[2]` variabelen zijn met telkens `r dim(verloop)[1]` observaties. 
+
+<br>
+
+------------------------
+
+# Padanalyse in R
+
+Je kan het model fitten en alle parameters erin schatten in twee stappen.
+
+<br>
+
+## Verbanden tussen variabelen vastleggen {.tabset .tabset-fade .tabset-pills .unnumbered}
+
+Eerst leg je vast welke verbanden je model moet bevatten tussen welke variabelen. Die structuur stop je in een object. Vergeet de enkele aanhalingstekens `'` vooraan en achteraan niet. In het model hieronder zijn verschillende soorten verbanden opgenomen, elk met een eigen syntax. Die zullen we een voor een bespreken.
+
+Merk op dat hier een nieuwe variabele tussenstaat, namelijk `perceptieWerkXjobTevr`. Die is het product van `perceptieWerk` en `jobTevr`. Dit product in het model opnemen als nieuwe variabele is een manier om het moderatie-effect te modelleren.
+
+```{r}
+mijnModel <- '
+             # Directe effecten
+               intentieVertrek ~ c1*POFit
+               intentieVertrek ~ b2*perceptieWerk
+               intentieVertrek ~ b3*perceptieWerkXjobTevr
+ 
+             # Mediatie en controlevariabelen
+               jobTevr ~ a1*POFit + GOK + LFTD + JAARSCH + GESL
+               intentieVertrek ~ b1*jobTevr + GOK + LFTD + JAARSCH + GESL
+ 
+             # Conditioneel Indirect Effect van POFit op intentieVertrek 
+             #  voor bepaalde waarden van perceptieWerk. 
+             #  1.02 is de standaarddeviatie van perceptieWerk.
+               CIE1 := a1*(b1+b3*-1.02)
+               CIE2 := a1*(b1+b3*0)   
+               CIE3 := a1*(b1+b3*1.02)
+ 
+             # Direct en Indirect Effect van POFit op intentieVertrek
+               indirect := a1*b1
+               direct := c1
+               total := c1 + (a1*b1)
+             '
+
+```
+
+<br>
+
+### Directe effecten {-}
+
+<div class='tabset_kader'>
+
+Directe effecten codeer je met de operator `~`. 
+
+De code hierboven is opgesplitst in drie lijnen. Het kan even goed in één lijn:
+
+```{r, eval=FALSE}
+mijnModel <- '# Directe effecten
+              intentieVertrek ~ c1*POFit + b2*perceptieWerk + b3*perceptieWerkXjobTevr
+              '
+```
+
+<br>
+
+`c1`, `b2` en `b3` zijn labels. Die moeten enkel in je code staan als je er verderop indirecte effecten mee wil berekenen. 
+
+<br>
+
+Een alternatieve manier om een moderatie-effect te specifiëren is door `:` te gebruiken in je syntax.
+
+```{r, eval=FALSE}
+mijnModel <- '# Directe effecten
+              intentieVertrek ~ c1*POFit + b2*perceptieWerk + b3*perceptieWerk:jobTevr
+              '
+```
+
+Meer informatie over moderatie (interactie) vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=61' target='_blank'>hier</a> vanaf p.61.
+
+</div>
+
+<br>
+
+### Mediator {-}
+
+<div class='tabset_kader'>
+
+Je vermoedt dat er sprake is van mediatie. Het effect van `POFit` op `intentieVertrek` zou (eventueel gedeeltelijk) gemedieerd worden door `jobTevr`.
+
+Ook dit systeem van verbanden tussen variabelen codeer je als een verzameling directe effecten met `~`. Ook hier zijn labels toegevoegd om later indirecte effecten te berekenen. 
+
+Meer uitleg over mediatie vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_mediatie.pdf' target='_blank'>hier</a> en een voorbeeld met lavaan vind je <a href='https://statlas.ugent.be/cursussen/OMII_Mediatie.pdf' target='_blank'>hier</a>.
+
+</div>
+
+<br>
+
+
+### Indirecte effecten berekenen {-}
+
+<div class='tabset_kader'>
+
+Bij een aantal directe effecten heb je labels (a1, b1,...) vastgelegd. De labels stellen schattingen van padcoëfficiënten voor. Aan de hand daarvan kan je nu ook indirecte effecten laten berekenen. Daarvoor vermenigvuldig je de padcoëfficiënten op een pad tussen twee variabelen. 
+
+Totale effecten berekenen kan ook. Die zijn niets anders dan de som van alle indirecte en directe effecten die te vinden zijn tussen twee variabelen.
+
+Zulke berekeningen zie je op het einde van `mijnModel`. Het effect dat je wil berekenen geef je een naam, gevolgd door de operator `:=` met daarachter de gepaste formule met labels. Indirecte effecten die je op deze manier uitdrukkelijk laat berekenen zal je ook terugzien in de uiteindelijke output (zie verderop).
+
+Let op: er is een moderatie-effect aanwezig in het model. Het effect van `jobTevr` op `intentieVertrek` kan dus verschillend zijn afhankelijk van `perceptieWerk`. De syntax `indirect := a1*b1` levert je een waarde op voor het indirecte effect, in de specifieke conditie dat `perceptieWerk` de waarde 0 heeft. Het is met andere woorden een conditioneel indirect effect (en het is trouwens gelijk aan `CIE2` wat hogerop).
+
+In veel situaties is de conditie waarin een variabele de waarde 0 heeft onrealistisch of absurd.^[Denk bijvoorbeeld ook aan een IQ of lichaamslengte gelijk aan 0.]  Ook hier is `perceptieWerk` gelijk aan nul niet echt betekenisvol.
+
+Om ervoor te zorgen dat dit indirect effect wel een weergave is van een realistische situatie gaat men de moderatorvariabele `perceptieWerk` centreren. Dat zorgt ervoor dat de waarde 0 samenvalt met het gemiddelde van deze variabele. Dat heeft men in dit onderzoek inderdaad gedaan.
+
+```{r}
+mean(verloop$perceptieWerk, na.rm=TRUE)  # afgerond 0
+```
+
+<br>
+
+Je kan nog een stap verder gaan en berekenen wat het indirect effect is bij andere waarden van de moderator `perceptieWerk` (dus opnieuw "conditionele indirecte effecten"). Zo kies je er ook voor om het effect te berekenen wanneer `perceptieWerk` één standaarddeviatie onder en boven het gemiddelde ligt (respectievelijk `CIE1` en `CIE3`).
+
+```{r}
+sd(verloop$perceptieWerk, na.rm=TRUE) # afgerond 1.02
+```
+
+</div>
+
+<br>
+
+
+## Schatten van parameters {.tabset .tabset-fade .tabset-pills -}
+
+In een tweede stap schat je alle parameters van het model met de functie `sem()`. Deze functie heeft de specificatie van het model nodig (object `mijnModel`) en de data.^[In plaats van de volledige dataset wordt vaak enkel de variantie-covariantiematrix aan `sem()` gegeven.]
+
+```{r, eval=FALSE, cache=TRUE}
+fit <- sem(mijnModel, data = verloop, se = 'bootstrap')
+```
+
+<br>
+
+In de code zie je een extra argument `se = 'bootstrap'`. Dit slaat op de methode om de standaardfouten ("standard error") van parameters te berekenen. Wanneer je bv. een indirect effect schat, dan is de parameter een product van twee andere parameters en dus typisch niet normaal verdeeld over vele steekproeven heen. Met de "gewone" methode van standaardfouten berekenen kan dit tot verkeerde conclusies leiden over de significantie van het indirect effect. Daarom is het aangeraden om `se = 'bootstrap'` te kiezen.
+
+<br>
+
+-----------------------------
+
+# Resultaten tonen {.tabset .tabset-fade .tabset-pills}
+
+Om de resultaten te zien gebruik je de functie `summary()`. Het object `fit` kan uiteraard niet ontbreken. Met de argumenten kan je verder bepalen wat je precies in de output wil zien. (De interpretatie van de output wordt verderop besproken.)
+
+```{r, eval=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+```
+
+<br>
+
+Enkele keuzes die je kan maken bij de `summary()`-functie zijn:
+
+<br>
+
+
+## `fit.measures = TRUE` {-}
+
+<div class='tabset_kader'>
+
+Indien `fit.measures = FALSE` - wat standaard het geval is - wordt enkel een $\chi^2$-toets uitgevoerd als maat voor de fit van het model. Deze toets is niet altijd voldoende om de model fit te beoordelen, zeker bij hele grote steekproeven.
+
+Het is aangeraden om bijkomende fitmaten te laten berekenen en te rapporteren in je publicatie, zoals CFI/TLI, RMSEA en SRMR. Al deze fitmaten zijn op een verschillende manier gevoelig voor misspecificatie van het model. Voeg deze fitmaten toe door eenvoudigweg het argument `fit.measures = TRUE` te gebruiken. De lezer van je onderzoek kan zo zelf ook een oordeel vellen.
+
+Meer uitgebreide uitleg over deze fitmaten vind je in:
+
+Kline, R. B. (2015). Principles and practice of structural equation modeling (Fourth
+Edition). New York: Guilford Press.
+
+</div>
+
+<br>
+
+## `standardized = TRUE` {-}
+
+<div class='tabset_kader'>
+
+Het is niet zomaar mogelijk om de padcoëfficiënten onderling te vergelijken en om uitspraken te doen over welke groter of kleiner is. Dat komt omdat de getalwaarde ervan afhangt van de meeteenheid van de variabelen. 
+Met het argument `standardized = TRUE` krijg je een extra kolom `Std.all` met schattingen voor gestandaardiseerde padcoëfficiënten. Wanneer er nu twee pijlen in eenzelfde variabele toekomen, zoals bij `intentieVertrek`, kan je wel de grootte van de verschillende effecten vergelijken.
+
+</div>
+
+<br>
+
+## `rsquare = TRUE` {-}
+
+<div class='tabset_kader'>
+
+Met dit argument kan je een schatting van de proportie verklaarde variantie (m.a.w. de determinatiecoëfficiënt $R^2$) van elke endogene variabele laten berekenen.
+
+</div>
+
+<br>
+
+
+----------------------------
+
+# Resultaten interpreteren
+
+Wat kan je leren uit de output van `summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)`?
+
+<details>
+<summary> Toon/verberg de output van `summary()`
+</summary>
+
+```{r, echo=FALSE}
+summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+```
+
+</details>
+
+<br>
+
+
+## Fit van het model {-}
+
+Of het model in zijn geheel goed fit met de data kan je achterhalen met behulp van de verschillende fitmaten.
+
+Let op! De $\chi^2$-toets onder `Model Test User Model` interpreteren is hier anders dan je misschien intuïtief zou denken. Hier stelt de nulhypothese dat er een goede fit is. Dus als je hier een p-waarde kleiner dan 0.05 ziet, dan is de conclusie dat je de nulhypothese van goede fit moet verwerpen.
+
+Met het argument `fit.measures = TRUE` heb je naast de $\chi^2$-toets nog andere fitmaten opgevraagd. Vuistregels voor deze fitmaten zijn dat er een goede fit is als ...
+<ul>
+<li>CFI/TLI > 0.95
+<li>RMSEA < 0.05
+<li>SRMR < 0.06
+</ul>
+
+In ons voorbeeld is de fit over het algemeen niet erg goed. Verschillende fitmaten wijzen op een slechte fit. Enkel de SRMR en CFI lijken aan te geven dat er een goede fit is.
+
+In principe betekent dit dat je niet verder kan gaan met de analyse van de afzonderlijke padcoëfficiënten. Je zou eerst op zoeken moeten naar een beter fittend model. Om de demonstratie verder te kunnen zetten zullen we er nu van uitgaan dat er wél een goede fit is. 
+
+### <span style='color:#000'><i>Modification indices</i></span> {-}
+
+Als de fit van je model niet goed is, kan je eventueel de functie `modificationIndices()` gebruiken om suggesties te krijgen voor verbeteringen. In de kolom `mi` lees je welke bijkomende parameters een substantiële impact zouden hebben op de fit.^[Bij de verbanden die al in je model zitten, staat er logischerwijs een waarde 0 in deze kolom.]
+
+<div class="warning"> Hier moet je wel heel voorzichtig mee omspringen! Het is verleidelijk om je model fit te verbeteren door zonder nadenken wat extra verbanden in het model te stoppen. Het gevaar bestaat dan dat je onzinnige connecties gaat maken (bv. effect van jobtevredenheid <em>op</em> leeftijd of geslacht). Je mag een effect dus enkel toevoegen als je er goede theoretische redenen voor hebt, als je echt reden hebt om te denken dat dat effect er in werkelijkheid zou kunnen zijn.</div>
+
+<br>
+
+```{r, eval=FALSE}
+modificationIndices(fit)
+```
+
+<details>
+<summary> Toon/verberg de output van `modificationIndices()`
+</summary>
+
+```{r, echo=FALSE}
+modificationIndices(fit)
+```
+
+</details>
+
+<br>
+
+## Schattingen en toetsen van padcoëfficiënten {-}
+
+Verschillende padcoëfficiënten blijken significant te verschillen van nul.
+
+Dat is het geval voor onder meer
+
+<ul>
+<li> het effect van `POFit` op `jobTevr` (label a1)
+<li> het effect van `jobTevr` op `intentieVertrek` (label b1)
+<li> het interactie-effect van `perceptieWerk` op de relatie tussen `jobTevr` en `intentieVertrek` (label b3)
+</ul>
+
+<details>
+<summary>Toon/verberg het model met labels</summary>
+
+<img src="https://statlas.ugent.be/img/padanalyse_volledig.png" alt="Vekeman hypothesen">
+
+</details>
+
+<br>
+
+Je kan ook schattingen aflezen voor de indirecte effecten die uitdrukkelijk in `mijnModel` werden gespecifieerd, bijvoorbeeld `indirect` (het product van de directe effecten met labels a1 en b1). Om te bepalen of een indirect effect significant verschillend is van nul kan je geen beroep doen op de toets die wordt uitgevoerd in de output van `summary()`. Daarvoor kijk je beter naar het (bootstrap-gebaseerde) betrouwbaarheidsinterval. Dit betrouwbaarheidsinterval kan je opvragen met de functie `parameterEstimates()`. In dit geval blijkt bijvoorbeeld dat 0 niet in het interval ligt bij `indirect` (lijn 47), dus kan je concluderen dat het effect significant verschillend is van 0. 
+
+```{r, eval=F}
+parameterEstimates(fit)
+```
+
+<details>
+<summary>Toon/verberg de output van `parameterEstimates()`</summary>
+
+```{r, echo=F}
+parameterEstimates(fit)
+```
+
+</details>
+
+<br>
+
+De padcoëfficiënten moet je interpreteren zoals regressiecoëfficiënten in lineaire regressie. Het is het verschil dat we verwachten te zien in de verklaarde variabele wanneer de verklarende variabele één eenheid hoger is.
+
+<div class='warning'>Wees dus voorzichtig en grijp niet te snel naar causale interpretaties. Als de richtingen van alle effecten correct gespecifieerd zijn en er geen gemeenschappelijke oorzaken ontbreken in het model, dan kan dit effect mogelijk causaal geïnterpreteerd worden. Voorzichtigheid blijft altijd geboden!
+</div>
+
+<br>
+
+-------------------
+
+# Visualiseren van een padanalysemodel
+
+Met het package `lavaanPlot` kan je een padanalysemodel visueel weergeven. 
+
+```{r, eval=FALSE}
+install.packages("lavaanPlot") # eenmalig het package installeren
+
+library(lavaanPlot) # package laden voor gebruik
+
+lavaanPlot(model = fit, 
+           node_options = list(shape = "box", fontname = "Helvetica"), 
+           edge_options = list(color = "grey"), 
+           coefs = TRUE,
+           sig=.05 # toon enkel significante coëfficiënten
+           )
+```
+
+<details>
+<summary> Toon/verberg de plot</summary>
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4}
+library(lavaanPlot)
+
+lavaanPlot(model = fit, 
+           node_options = list(shape = "box", fontname = "Helvetica"), 
+           edge_options = list(color = "grey"), 
+           coefs = TRUE,
+           sig=.05 # toon enkel significante coefs
+           )
+```
+
+</details>
+
+<br>
+
+
+Een alternatief is het package `semPlot`. 
+
+```{r, eval=FALSE}
+
+install.packages('semPlot') # eenmalig het package installeren
+
+library(semPlot) # package laden voor gebruik
+
+semPaths(fit, layout='circle')
+
+```
+
+<details>
+<summary> Toon/verberg de plot</summary>
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4}
+library(semPlot)
+
+semPaths(fit, layout='circle')
+
+```
+
+</details>
+
+<br>
+
+-------------------
+
+# Voetnoten {#voetnoten}
+
+
+
+# Referenties
+
+<p id='Referentie'>Vekeman E., Devos G., Valcke M. & Rosseel Y. (2017). Do teachers leave the profession or move to another school when they don't fit? <i>Educational Review 69</i> (4), 411-434. doi: 10.1080/00131911.2016.1228610</p>
+
+
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```

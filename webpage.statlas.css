@@ -1,0 +1,209 @@
+/* Font UGent Panno */
+
+@font-face {
+    font-family: "Ugent-panno";
+    src: url('ugentpannotext-normal-web.ttf'), url('ugentpannotext-normal-web.eot');
+}
+
+
+/* Positionering */
+
+.right {
+    position: absolute;
+    right: 20px;
+}
+
+.left {
+    position: absolute;
+    left: 20px;
+}
+
+.center {
+    margin: auto;
+}
+
+
+/* UGent logo */
+
+div.mainbanner {
+    color: #ffffff;
+    font-family: Ugent-panno, Arial, Verdana, sans-serif;
+    font-size: x-large;
+    font-weight: bold;
+    border-color: #ffffff;
+    border: 3px solid;
+    border-radius: 3px;
+}
+
+div.container {
+    display: flex;
+}
+
+div.container div {
+    width: 100%;
+}
+
+div.container2 {
+    display: flex;
+    flex-direction: column;
+}
+
+div.container2 div {
+    height: 100%;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.ugentlogo {
+    padding-top: 5px;
+    padding-left: 40px;
+}
+
+.fppwlogo {
+    padding-top: 5px;
+    padding-left: 40px;
+}
+
+a.navlink {
+    float: left;
+    font-size: large;
+    text-decoration: underline;
+    display: inline;
+    width: 20%;
+    color: #fff;
+    padding-left: 20px;
+}
+
+
+/* Standard paragraph */
+
+p {
+    font-family: Arial, Verdana, sans-serif;
+    margin-left: 20px;
+    margin-bottom: 1em;
+    padding-left: 15px;
+    width: 80%;
+}
+
+
+/* Headers */
+
+h1 {
+    color: #000000;
+    background-color: #1E64C820;
+    border-radius: 3px;
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 28px;
+    padding-top: 15px;
+    padding-bottom: 20px;
+    padding-left: 15px;
+}
+
+h2 {
+    color: #ffffff;
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 20px;
+    margin-top: 50px;
+    margin-bottom: 30px;
+    margin-left: 20px;
+}
+
+h2 span {
+    background-color: #FB7E3A95;
+    border-radius: 3px;
+    padding-top: 10px;
+    padding-bottom: 12px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+h3 {
+    color: #000000;
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 16px;
+    margin-top: 40px;
+    margin-bottom: 13px;
+    margin-left: 20px;
+    padding-bottom: 5px;
+    padding-left: 15px;
+}
+
+
+/* Grid */
+
+
+/* Links */
+
+a {
+    color: dodgerblue
+}
+
+
+/* Images */
+
+img.ugentlogo {
+    width: 150px;
+    border: none;
+}
+
+p.link_text {
+    color: #AEB050;
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 18px;
+    float: left;
+    display: inline;
+    width: 50%
+}
+
+
+/* Tabellen */
+
+table {
+    font-family: Arial, Verdana, sans-serif;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-bottom: 20px;
+}
+
+
+/* Lists */
+
+ul {
+    font-family: Arial, Verdana, sans-serif;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-bottom: 20px;
+}
+
+ol {
+    font-family: Arial, Verdana, sans-serif;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-bottom: 20px;
+}
+
+li {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+
+/* Filepath */
+
+span.filepath {
+    font-family: Courier;
+    display: inline;
+    white-space: nowrap/*prevent wrapping of file path at the end of a line*/
+}
+
+
+/* Openklapbare tekst */
+
+summary {
+    color: #000000;
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 40px;
+    margin-bottom: 10px;
+}

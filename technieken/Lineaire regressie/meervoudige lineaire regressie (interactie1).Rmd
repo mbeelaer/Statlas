@@ -1,0 +1,370 @@
+---
+title: "Meervoudige lineaire regressie: interactie tussen een categorische en een continue predictor"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+    pandoc_args: 
+      - "--wrap=preserve"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+
+```
+
+<!--  {-} of {.unnumbered} na header zorgt ervoor dat deze sectie niet wordt genummerd ondanks "number_sections: TRUE" in YAML -->
+
+<br>
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+<details>
+<summary><span>Referentie</span></summary>
+
+<p class='meerInfo'>Het voorbeeld op deze pagina is geïnspireerd door een <a href='#Referentie'>studie van Mell et al. (2021)</a>. Om praktische en didactische redenen werden de hypothesen en de data aangepast.</p>
+</details>
+
+<br>
+
+------------------
+
+# Doel
+
+Lineaire regressie is een statistische techniek die je kan gebruiken om een hypothese te toetsen over het effect van een variabele (een onafhankelijke variabele of predictor) op een andere variabele (de afhankelijke variabele of uitkomst). In lineaire regressie is die afhankelijke variabele altijd continu, dus ten minste van intervalniveau.
+
+Dit effect kan zelf ook variëren onder invloed van een andere variabele: in sommige omstandigheden is het effect groter dan in andere omstandigheden. Anders gezegd, het effect van een predictor op een afhankelijke variabele hangt af van de waarde van een derde variabele. In dat geval is er sprake van een interactie-effect.
+
+Onderzoek heeft bijvoorbeeld uitgewezen dat er een effect is van iemands sociaal-economische status op het vertrouwen dat iemand heeft in anderen.
+
+Nu vraag jij je af of dit effect verschillend is naargelang iemands familiale situatie. Je vermoedt met andere woorden dat iemands burgerlijke staat een effect heeft op het verband tussen sociaal-economische status en vertrouwen.
+
+Via een modelvergelijkingstoets kan je toetsen of er een interactie-effect speelt.
+
+Op deze pagina kom je te weten hoe je zo'n toets kan uitvoeren in R. De uitleg op deze pagina gaat over interactie tussen een categorische (meer bepaald een nominale) predictor en een continue predictor.
+
+Zo goed als altijd zal je moeten controleren voor extra predictoren die het resultaat van de toetsing kunnen beïnvloeden.
+
+<br>
+
+<div class='warning'>
+
+<p>Let op! De demonstratie hieronder leert je alleen hoe je een hypothese over een interactie-effect kan toetsen. Wil je daarnaast ook conclusies trekken over de hoofdeffecten in hetzelfde model, dan zijn er heel wat extra zaken om rekening mee te houden.<a href='#voetnoot1'><sup>1</sup></a>
+
+
+</p>
+</div>
+
+<br>
+
+Interactie-effecten in een lineair regressiemodel worden uitgebreid behandeld in <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf' target='_blank'>deze cursus</a> vanaf p.61. Er is ook een <a href='https://statlas.ugent.be/cursussen/PCsessie2_opgave.pdf' target='_blank'>oefeningenreeks</a> met uitgewerkte <a href='https://statlas.ugent.be/cursussen/PCsessie2_feedback.pdf' target='_blank'>antwoorden</a> beschikbaar.
+
+<br>
+
+----------------
+
+# De dataset
+
+```{r, echo=FALSE}
+
+dataVertrouwen <- read.csv("https://statlas.ugent.be/datasets/vertrouwen.csv")
+
+```
+
+
+De dataset `dataVertrouwen` bevat gegevens van `r dim(dataVertrouwen)[2]` variabelen geobserveerd bij `r dim(dataVertrouwen)[1]` Belgen.
+
+Deze dataset kan je inladen met `read.csv()`. De data kan je best meteen in een object `dataVertrouwen` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+dataVertrouwen <- read.csv("https://statlas.ugent.be/datasets/vertrouwen.csv")
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(dataVertrouwen) 
+
+```
+
+In de output van `str()` zie je inderdaad dat er `r dim(dataVertrouwen)[2]` variabelen zijn met telkens `r dim(dataVertrouwen)[1]` observaties.
+
+Categorische variabelen die je in je analyse wil gebruiken zet je best meteen om met de functie `factor()`.
+
+```{r}
+dataVertrouwen$burgst <- factor(dataVertrouwen$burgst) 
+dataVertrouwen$wrkls <- factor(dataVertrouwen$wrkls) 
+dataVertrouwen$geslacht <- factor(dataVertrouwen$geslacht) 
+```
+
+<br>
+
+------------------------
+
+# Een lineair model met interactie specifiëren in R
+
+Je kan een model bouwen met de functie `lm()`. Het eerste argument van die functie is een formule waarin je specifieert welke variabelen je in het model wil opnemen:
+
+<ol>
+<li>een afhankelijke variabele
+<li>een tilde `~`
+<li>predictoren gescheiden door een `+`
+<li>predictoren waartussen je een interactie vermoedt gescheiden door een dubbele punt `:`
+
+</ol>
+
+In het tweede argument bepaal je uit welk dataframe de variabelen komen. Hier is dat `dataVertrouwen`.
+
+Zo'n model kan je in een object met een eenvoudige naam stoppen.
+
+```{r}
+modelInteractie <- lm(vertrouwen ~ sesKind + sesVolw + burgst + wrkls + geslacht + sesVolw:burgst, data = dataVertrouwen)
+```
+
+<br>
+
+Om te weten hoe de categorische variabelen gecodeerd worden kan je de functie `contrasts()` gebruiken. Standaard gebruikt R dummy-codering. Uit de output kan je leren dat `feitelijk gescheiden` het referentieniveau is van de variabele `burgst`. Meer over coderen en referentieniveaus vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=42' target='_blank'>hier</a> vanaf deel 3.
+
+```{r}
+contrasts(dataVertrouwen$burgst) # variabele burgst moet hiervoor van class 'factor' zijn!
+```
+
+<br>
+
+## Output van het model in R {-}
+
+Met de functie `summary()` kan je heel veel relevante informatie over het model oproepen. Als argument geef je gewoon het object `modelInteractie`.
+
+```{r}
+
+summary(modelInteractie)
+
+```
+
+Deze output is interessant omdat je er de regressiecoëfficiënten in terugvindt, in de kolom `r colnames(summary(modelInteractie)$coefficients)[1]`. Daardoor kan je aflezen/berekenen wat het geschatte effect is van `sesVolw` op `vertrouwen` voor verschillende niveaus van `burgst`. Bijvoorbeeld:
+
+```{r, echo=FALSE}
+rijen <- rownames(summary(modelInteractie)$coefficients)
+kolommen <- colnames(summary(modelInteractie)$coefficients)
+
+effectInRefniveau <- summary(modelInteractie)$coefficients[rijen=='sesVolw',kolommen=='Estimate']
+verschilEffectRefVsGetrouwd <- summary(modelInteractie)$coefficients[rijen=='sesVolw:burgstgetrouwd',kolommen=='Estimate']
+effectInNiveauGetrouwd <- effectInRefniveau + verschilEffectRefVsGetrouwd
+```
+
+
+<ul>
+<li> Voor het referentieniveau van `burgst`: het effect van `sesVolw` is `r effectInRefniveau`
+<li> Voor het niveau `getrouwd` van `burgst`: het effect van `sesVolw` is `r effectInRefniveau` $+$ `r verschilEffectRefVsGetrouwd` $=$ `r effectInNiveauGetrouwd`
+</ul>
+
+<br>
+
+De variabele `burgst` is een nominale variabele met 6 niveaus, waardoor in deze output 5 rijen te vinden zijn die iets met het interactie-effect te maken hebben. Er is in deze output dus niet 1 toets die je iets vertelt over het bestaan van het interactie-effect. Bijgevolg kan je uit deze output nog niet concluderen of er sprake is van een interactie-effect. Daarvoor zal je een afzonderlijke toets moeten uitvoeren: een modelvergelijkingstoets (zie verder).
+
+<br>
+
+-----------------------
+
+# Assumpties
+
+Hypothesetoetsing met lineaire regressie is enkel een bruikbare en betrouwbare techniek als aan een reeks voorwaarden is voldaan. Die moet je verifiëren vooraleer je met de interpretatie mag beginnen.
+
+De Gauss-Markovassumpties en de normaliteitsassumptie van de fouten kan je nagaan met `plot()`. Dit commando geeft je vier plots na elkaar. De eerste drie zijn relevant. In dit geval lijkt alles in orde en mag je verdergaan met de analyse. 
+
+Meer uitleg over de assumpties en deze plots vind je <a href='https://statlas.ugent.be/cursussen/Statistiek II syllabus 20-21.pdf#page=209' target=_blank>hier</a> (vanaf 9.9). 
+
+```{r, eval=FALSE}
+plot(modelInteractie)
+```
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(modelInteractie, which=1, main='1e GM-assumptie')
+plot(modelInteractie, which=2, main='normaliteit van de fouten')
+plot(modelInteractie, which=3, main='2e GM-assumptie: homoscedasticiteit')
+```
+
+<br>
+
+Merk op: zolang je enkel een toets uitvoert over het interactie-effect hoef je geen rekening te houden met mogelijke collineariteit met het interactie-effect. Zie over collineariteit in een lineair regressiemodel ook <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=65' target='_blank'>hier</a>, de tweede alinea op p.65.  
+
+<br>
+
+------------------------
+
+# Hypothese over een interactie-effect
+
+Je vraagt je af of het effect van sociaal-economische status op vertrouwen in andere mensen verschillend is naargelang iemands familiale situatie. Je vermoedt dus dat iemands burgerlijke staat (`burgst`) een effect heeft op het verband tussen `sesVolw` en `vertrouwen`.
+
+Dit kan je onderzoeken met behulp van een modelvergelijking. Dat houdt in dat je een model met een interactie tussen `sesVolw` en `burgst` vergelijkt met een model dat die interactieterm niet bevat, maar voor de rest wel identiek is. Als blijkt dat het model met die interactie over het algemeen betere predicties oplevert van `vertrouwen` dan kan je concluderen dat die betere predicties te wijten zijn aan de interactieterm. 
+
+We controleren ook voor nog andere predictoren. Dat doen we omdat de conclusie over het bestaan van het interactie-effect kan afhangen van de aanwezigheid van die extra predictoren in het model. De algemene regel is: neem elke predictor op waarvan je denkt dat die gerelateerd is aan de afhankelijke variabele en/of aan andere predictoren in het model.
+
+<br>
+
+## Nulhypothese en alternatieve hypothese {-}
+
+De nulhypothese stelt dat er geen interactie is. Het effect van `sesVolw` op `vertrouwen` is dan hetzelfde, ongeacht de waarde van `burgst`. Als dat klopt, dan zullen we geen of nauwelijks betere predicties zien in het model mét interactieterm in vergelijking met het model zonder interactieterm.
+
+De alternatieve hypothese stelt dat er wel interactie is, met andere woorden het effect van `sesVolw` op `vertrouwen` is verschillend in minstens één van de niveaus van `burgst`.
+
+<br>
+
+## Significantieniveau {-}
+
+Net als bij elke hypothesetoets moet je een significantieniveau kiezen. Hier kiezen we voor de veelgebruikte waarde $\alpha = 0.05$. 
+
+<br>
+
+## Modelvergelijking {-}
+
+Om te toetsen of `burgst` een effect heeft op het verband tussen `sesVolw` en `vertrouwen` voer je een modelvergelijking uit. Eerst specifieer je een tweede model `modelZonderInteractie` waarin de interactieterm `burgst:sesVolw` niet is opgenomen. 
+
+```{r}
+modelZonderInteractie <- lm(vertrouwen ~ sesKind + sesVolw + burgst + wrkls + geslacht, data = dataVertrouwen)
+```
+
+<br>
+
+Nu kan je de functie `anova()` gebruiken. De output ervan zal je vertellen of het model met interactieterm `burgst:sesVolw` je in staat stelt om over het algemeen betere predicties te maken van `vertrouwen` dan het model zonder die interactieterm.
+
+```{r}
+anova(modelZonderInteractie, modelInteractie)
+```
+
+<br>
+
+## Conclusie {-}
+
+```{r, echo=FALSE}
+modelVglInteractie <- anova(modelZonderInteractie, modelInteractie)
+pwaarde <- modelVglInteractie[2,6]
+```
+
+De conclusie kan je trekken door de p-waarde te vergelijken met het eerder gekozen significantieniveau $\alpha$. De p-waarde vind je in de meest rechtse kolom genaamd `r colnames(modelVglInteractie)[6]`. 
+
+In dit geval is `r pwaarde` een pak groter dan 0.05. Je kan dus de nulhypothese niet verwerpen.
+
+<br>
+
+-------------------
+
+# Visualiseren van interactie
+
+Een interactie-effect kan je visualiseren. Daarbij toon je het effect van één predictor op de afhankelijke variabele, bij verschillende waarden van de andere predictor. Hiervoor heb je het R-package `effects` nodig.
+
+<br>
+
+```{r, eval=FALSE}
+
+install.packages('effects') # eenmalig het package installeren
+
+library(effects) # bij de start van elke sessie moet je het package laden
+
+plot(effect('sesVolw:burgst', modelInteractie),
+     x.var='sesVolw', # plaatst deze variabele op de horizontale as van elk paneel
+     axes=list(grid=TRUE) # optioneel     
+     ) 
+
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=10}
+library(effects)
+
+plot(effect('sesVolw:burgst', modelInteractie),
+     x.var='sesVolw', # plaatst deze variabele op de horizontale as van elk paneel
+     axes=list(grid=TRUE) # optioneel     
+     ) 
+
+```
+
+<br>
+
+Uit de modelvergelijking bleek al dat er geen duidelijk interactie-effect speelde. Zie je dat ook terug in de plots?
+
+<details>
+<summary><span>Toon/verberg het antwoord</span></summary>
+
+<p class='meerInfo'>De helling van de rechte verschilt niet zoveel in de 6 plots. Het effect van `sesVolw` op `vertrouwen` is dus min of meer hetzelfde, ongeacht de waarde van `burgst`.</p>
+</details>
+
+<br>
+
+-------------------
+
+# Predicties
+
+Aan de hand van `modelInteractie` kan je predicties berekenen voor gelijk welke waarden van de predictoren. Die waarden zouden kunnen afkomstig zijn van een nieuw iemand, die bijvoorbeeld niet in de steekproef zat. Voor die nieuwe persoon krijg je een predictie van de waarde van `vertrouwen`.
+
+
+```{r}
+
+nieuwPersoon <- data.frame(sesKind=mean(dataVertrouwen$sesKind),
+                       sesVolw=mean(dataVertrouwen$sesVolw),
+                       burgst='feitelijk gescheiden', 
+                       wrkls='Ja', 
+                       geslacht='Man')
+
+predict(modelInteractie, nieuwPersoon)
+
+```
+
+<br>
+
+Meer uitleg over de precieze berekening van predicties vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=75' target='_blank'>hier</a> vanaf 1.(a). 
+
+<br>
+
+-------------------
+
+# Voetnoten {#voetnoten}
+
+<ol>
+<li id='voetnoot1'> Meer bepaald zal je je moeten bewust zijn van:
+
+<ul>
+<li>het gebruikte coderingsschema: dummy- of effectcodering
+<li>het type toets dat wordt gehanteerd: type I, II of III
+<li>het feit dat er mogelijk problemen van collineariteit kunnen zijn
+</ul>
+
+<br>
+
+Meer uitleg vind je <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21.pdf#page=120' target='_blank'>hier</a> vanaf 5.3.
+</ol>
+
+<br>
+
+----------------------
+
+# Referenties
+
+<p id='Referentie'>Mell H., Safra L., Demange P., Algan Y., Baumard N. & Chevallier C. (2021). Early life adversity is associated with diminished social trust in adults. <i>Political Psychology</i>. doi: 10.1111/pops.12756</p>
+
+
+
+```{js, echo=FALSE}
+$(document).ready(function() {
+  $('.footnotes ol').appendTo('#voetnoten');
+  $('.footnotes').remove();
+});
+```

@@ -1,0 +1,313 @@
+---
+title: "Data verkennen: een categorische variabele"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output")
+```
+
+<br>
+
+------------------------
+
+Op deze pagina vind je een demonstratie van een statistische techniek aan de hand van een voorbeeld. 
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+<!-- ../ verwijst naar hogere directory -->
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+<br>
+
+------------------
+
+# Doel
+
+Het is een goed idee om een dataset te verkennen, vooraleer je er allerlei statistische technieken op loslaat. R biedt een heel uitgebreid gamma aan functies om dat te doen. 
+
+Het is vaak niet de bedoeling om de output van die functies te publiceren. Ze dienen vooral om zelf meer inzicht te krijgen in de variabelen in je dataset.
+
+Hier focussen we op de beschrijving en visuele voorstelling van één categorische variabele. 
+
+<br>
+
+
+```{r, echo=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv") 
+```
+
+<!-- mean, sd/var, min/max, boxplot voor ctue var, histogram/frequentietabel voor discrete var -->
+
+-------------------
+
+# De dataset
+
+De dataset `enquete` bevat gegevens van `r dim(enquete)[2]` variabelen geobserveerd bij `r dim(enquete)[1]` studenten uit het eerste jaar hoger onderwijs.
+
+Deze dataset kan je inladen met onderstaande code. De data wordt meteen in een object `enquete` ondergebracht zodat je het later makkelijk kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete.csv") 
+```
+
+<br>
+
+Het object `enquete` is een dataframe dat alle data voor alle variabelen bevat.
+
+```{r}
+class(enquete) # Denk eraan dat R hoofdlettergevoelig is!
+```
+
+<br>
+
+Met `str()` krijg je een opsomming van alle variabelen in de dataset. Je vindt er ook telkens bij om welk datatype het gaat. Afhankelijk van het datatype zal je sommige functies wel of juist niet kunnen gebruiken om je data te verkennen. Het heeft bijvoorbeeld geen zin om een gemiddelde te berekenen van een variabele van type `chr`.
+
+```{r}
+
+str(enquete) 
+
+```
+
+<br>
+
+In de output van `str()` zie je inderdaad dat er `r dim(enquete)[2]` variabelen zijn met telkens `r dim(enquete)[1]` observaties (hier dus: studenten die de enquête hebben ingevuld). 
+
+<br>
+
+------------------
+
+# Eén variabele selecteren
+
+Met het symbool <strong>$</strong> kan je één variabele uit een dataset selecteren. Hier selecteren we `Handedness`. Die variabele geeft weer of een student rechtshandig of linkshandig is. 
+
+```{r, eval=FALSE}
+enquete$Handedness
+```
+
+<br>
+
+Het is vaak handig om deze variabele in een nieuw object te stoppen. Dit is vooral de moeite waard als je nog heel vaak naar deze variabele zal moeten verwijzen. Het kan ook interessant zijn als de oorspronkelijke variabele een moeilijk te begrijpen naam heeft.
+
+```{r}
+hand <- enquete$Handedness
+```
+
+<br>
+
+Vanaf nu kan je `hand` typen om naar deze variabele te verwijzen in plaats van `enquete$Handedness`.
+
+<br>
+
+----------------
+
+# Type variabele: `chr` of `factor`
+
+Met `class()` kan je achterhalen om welk type variabele het gaat.
+
+```{r}
+class(hand)
+```
+
+<br>
+
+Dat is een (klein) probleem... Er zijn namelijk enkele functies in R die niet werken met een `chr`-type. Je zal dan een foutmelding of een raar antwoord zien. Onderstaande functie bijvoorbeeld zou je moeten het aantal niveaus (in het Engels: levels) van `hand` geven. `r nlevels(hand)` is in ieder geval niet het juiste aantal!
+
+```{r, error=TRUE}
+nlevels(hand)
+```
+
+<br>
+
+Je kan hieraan verhelpen door de variabele te transformeren naar het type `factor`.
+
+```{r}
+hand <- factor(hand)
+```
+
+<br>
+
+Dezelfde code zal nu wel een zinnig resultaat opleveren.
+
+```{r}
+nlevels(hand)
+```
+
+
+<!-- `chr` staat voor `character` en is geschikt voor eigennamen. Zo is de variabele `enquete$district` ook van het type `chr`. In dat geval is dat zinnig, want elk district heeft een **eigen**, unieke naam. Het datatype `factor` daarentegen is meer te vergelijken met soortnamen. `enquete$grspan` gaat over hoe scholen leerjaren opsplitsen (een beetje te vergelijken met lager onderwijs en middelbaar onderwijs in België). Een school met waarde `KK-06` volgt een bepaald systeem van opdeling en een school met `KK-08` volgt een ander systeem.  -->
+
+<br>
+
+Wat zijn die `r nlevels(hand)` niveaus dan? Daarvoor dient de functie `levels()`.
+
+```{r}
+levels(hand)
+```
+
+<br>
+
+-----------------
+
+# Frequentietabel {.tabset .tabset-fade .tabset-pills}
+
+## Absolute frequentie {-}
+
+<br>
+
+<div class="tabset_kader">
+
+Met `table()` kan je een frequentietabel opvragen van een categorische variabele.
+
+```{r}
+table(hand)
+```
+
+<br>
+
+Deze tabel toont je de absolute frequenties van de niveaus van `hand`. Deze frequenties kan je makkelijk visualiseren met `barplot()`.
+
+```{r}
+barplot(table(hand))
+```
+
+<br>
+
+Voor de leesbaarheid van je code is het soms verstandiger om lijnen code op te splitsen. De code hieronder is helemaal equivalent aan de code hierboven.
+
+```{r, eval=F}
+abs.freq <- table(hand)
+barplot(abs.freq)
+```
+
+```{r, echo=F}
+abs.freq <- table(hand)
+```
+
+<br>
+
+Kleuren kunnen helpen om een visuele voorstelling van data aantrekkelijker, maar vooral ook duidelijker te maken. Je kan de lijst met beschikbare kleuren opvragen met het commando `colors()`.
+
+```{r}
+barplot(abs.freq, col=c('steelblue', 'lightgreen')) # indien meer niveaus, dan ook meer kleuren nodig!
+```
+
+<br>
+
+Voor elk niveau van de variabele heb je een kleur nodig. Hier is snel duidelijk dat de variabele twee niveaus heeft. Soms zal dit misschien minder evident zijn. 
+
+Dan kan je achterhalen hoeveel kleuren je nodig hebt met de functie `nlevels()`. Die vertelt je hoeveel niveaus er zijn. 
+
+```{r}
+
+nlevels(hand) # de variabele moet van type 'factor' zijn! (Zie eerder)
+
+```
+
+<br>
+
+Voor een lijst van de niveaus kan je `levels()` gebruiken.
+
+```{r}
+levels(hand)
+```
+
+<br>
+
+Je kan de staven ook bovenop elkaar stapelen, in plaats van naast elkaar. Dat kan door de tabel als een matrix aan de functie `barplot()` te geven.
+
+```{r}
+barplot(as.matrix(abs.freq), col=c('steelblue', 'lightgreen'))
+```
+
+<br>
+
+</div>
+
+-------------------
+
+## Relatieve frequentie {-}
+
+<br>
+
+<div class="tabset_kader">
+
+Je kan iets gelijkaardig doen voor de relatieve frequentie. Daarvoor zal je `proportions()` gebruiken. Deze functie heeft een `table`-object nodig als argument, bijvoorbeeld `table(hand)`.<a href='#voetnoot1'><sup>1</sup></a>
+
+```{r}
+abs.freq <- table(hand)
+proportions(abs.freq)
+```
+
+<br>
+
+Ook van de relatieve frequenties kan je een staafdiagram met kleuren maken.
+
+```{r}
+rel.freq <- proportions(abs.freq)
+barplot(rel.freq, col=c('steelblue', 'lightgreen'))
+```
+
+<br>
+
+Wil je liever percentages in plaats van relatieve frequenties, dan moet je vermenigvuldigen met 100.
+
+```{r}
+percentages <- rel.freq * 100
+barplot(percentages, col=c('steelblue', 'lightgreen'))
+```
+
+<br>
+
+Je kan de staven ook bovenop elkaar stapelen, in plaats van naast elkaar. Dat kan door de tabel als een matrix aan de functie `barplot` te geven.
+
+```{r}
+barplot(as.matrix(percentages), col=c('steelblue', 'lightgreen'))
+```
+
+<br>
+
+</div>
+
+----------------------
+
+# Voetnoten
+
+<ol>
+<li>
+<p id='voetnoot1'> Let op! Bij de berekening van de relatieve frequenties houdt de functie `proportions()` geen rekening met het bestaan van <a href="dataverkennen7_ontbrekende_data.html" target="_blank">ontbrekende data</a>. De relatieve frequentie die je afleest is dus de absolute frequentie gedeeld door het aantal werkelijke observaties. 
+
+Wil je toch delen door het aantal werkelijke observaties <em>plus</em> het aantal ontbrekende waarden, dan kan je onderstaande code typen.
+</p>
+```{r}
+table(hand)/length(hand)
+```
+
+<br>
+
+In deze dataset kom je dezelfde proporties uit aangezien hier geen ontbrekende data zijn.
+
+</ol>
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+

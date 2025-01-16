@@ -1,0 +1,218 @@
+---
+title: "t-toets voor een verwachting"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    toc_float: true
+    css: C:\Users\michi\Documents\FPPW. Project statistische technieken\pagina's\statlas_technieken.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment="", 
+  prompt=FALSE,
+  class.source="r-chunk", 
+  class.output="chunk-output"
+  )
+```
+
+
+
+<br>
+
+------------------------
+
+Op deze pagina wordt een statistische techniek gedemonstreerd aan de hand van een voorbeeld. Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target="_blank">handleiding</a>. 
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+------------------------
+
+# Doel
+
+Met deze techniek kan je nagaan of een verwachting in een populatie verschillend is van een vooropgestelde waarde.
+
+------------------------
+```{r data_import1, echo=FALSE}
+
+n <- 54
+mu_0 <- 58
+
+```
+
+# Voorbeeld
+
+Onderzoekers meten de variabele jobtevredenheid ($X$) aan de hand van een vragenlijst. Deze variabele kan elke waarde aannemen van $0$ tot $100$.
+
+Uit een recent grootschalig onderzoek is gebleken dat Belgen gemiddeld $`r mu_0`$ scoren. Je vraagt je af of leerkrachten in het lager onderwijs hoger scoren dan $`r mu_0`$. 
+
+Je verzamelt gegevens om een antwoord te kunnen formuleren. Daarvoor trek je een steekproef van $`r n`$ leerkrachten in het lager onderwijs. 
+
+
+-------------------
+
+# Data importeren
+
+De data bij dit voorbeeld kan je met het onderstaande commando importeren in R.
+
+```{r data_import2}
+
+mijn_data <- read.csv("https://statlas.ugent.be/datasets/tevredenheidsstudie.csv")
+
+```
+
+<br>
+
+Inspecteer de data met de functie `str()`.
+
+```{r}
+
+str(mijn_data)
+
+```
+
+<br>
+
+Het object `mijn_data` bevat een dataframe met alle gegevens. In dit voorbeeld hebben we enkel de variabele jobtevredenheid nodig. Die kan je apart selecteren uit het dataframe en in een nieuw object stoppen.
+
+```{r}
+
+jobtevr <- mijn_data$jobtevr
+
+```
+
+<br>
+
+----------------------
+
+# Hypothesen
+
+De hypothesen die bij deze toets horen zijn:
+
+$$H_0: \mu_X = \mu_0 \text{, in dit geval } \mu_X = `r mu_0` $$
+$$H_a: \mu_X > \mu_0 \text{, in dit geval } \mu_X > `r mu_0` $$
+
+
+<br>
+
+Dit is een eenzijdige toets. Meer uitleg over eenzijdig versus tweezijdig toetsen vind je <a href="https://statlas.ugent.be/cursussen/Statistiek I syllabus 20-21.pdf#page=238" target="_blank">hier</a>.
+
+<br>
+
+De verwachting van de jobtevredenheid onder $H_0$ kan je ook als een object in R opslaan.
+
+```{r}
+
+mu_0 <- 58
+
+```
+
+<br>
+
+----------------
+
+# Data verkennen
+
+Met de functie `summary()` kan je snel een overzicht van een variabele krijgen. 
+
+```{r}
+summary(jobtevr)
+```
+
+<br>
+
+Met de functie `mean()` is het eenvoudig om afzonderlijk het gemiddelde van de variabele jobtevredenheid in de steekproef van $54$ leerkrachten te berekenen.
+
+```{r}
+mean(jobtevr)
+```
+
+<br>
+
+Deze waarde is wat groter dan $`r mu_0`$. Met een statistische toets zal je nagaan of het geloofwaardig is dat deze afwijking louter aan toeval te wijten is.
+
+<br>
+
+Een visuele samenvatting van `jobtevr` kan je bekomen door een boxplot te tekenen. 
+
+```{r}
+boxplot(jobtevr)
+```
+
+<br>
+
+---------------
+
+# Keuze toets 
+Je toetst of een verwachting $\mu_X$ groter is dan een gegeven waarde. De populatievariantie $\sigma_X^2$ is niet gekend. Je kiest dus voor een t-toets voor één verwachting.
+
+
+## Assumpties {-}
+Om een t-toets voor één verwachting te kunnen gebruiken moet voldaan zijn aan volgende assumpties:
+
+<ul>
+<li> $X$ moet tenminste van intervalniveau zijn. Dat is het geval in dit voorbeeld.
+
+<li> $X$ moet een normale verdeling volgen of de steekproef moet voldoende groot zijn. Over de verdeling van de variabele is geen informatie gegeven, maar visuele inspectie met `qqnorm()` leert je dat de verdeling min of meer normaal is. Hier is bovendien de steekproefgrootte $n= `r n`$. De vuistregel is dat $n\geq30$ moet zijn, dus aan deze voorwaarde is zeker voldaan.
+
+
+```{r}
+qqnorm(jobtevr)
+```
+
+</ul>
+<br>
+
+------------------------
+
+# Significantieniveau
+
+Vóór je de toets uitvoert dien je een significantieniveau $\alpha$ te kiezen. 
+
+```{r}
+
+alpha <- 0.10
+
+```
+
+<br>
+
+-----------------------
+
+# Toets 
+
+De t-toets kan je uitvoeren met de functie `t.test()`:
+
+```{r t-toets}
+
+t.test(jobtevr, mu=mu_0, alternative="greater", conf.level=1-alpha)
+
+```
+
+```{r, echo=FALSE}
+
+toets <- t.test(jobtevr, mu=mu_0, alternative="greater", conf.level=1-alpha)
+p.waarde <- toets$p.value
+bi <- toets$conf.int
+
+```
+
+<br>
+
+## Beslissing {-}
+
+Je stelt vast dat de overschrijdingskans $p= `r p.waarde`$ kleiner is dan de waarde voor $\alpha$ die eerder is vastgelegd, namelijk $\alpha=`r alpha`$. Hieruit concludeer je dat je de nulhypothese moet verwerpen op het $`r alpha*100`\%$ significantieniveau.
+
+Je kan tot dezelfde conclusie komen aan de hand van het betrouwbaarheidsinterval. Je stelt vast dat de waarde $`r mu_0`$ zich niet in het $`r (1-alpha)*100`\%$ betrouwbaarheidsinterval $[`r bi[1]`, `r bi[2]`[$ bevindt. De nulhypothese, die stelt dat de verwachting bij leerkrachten gelijk is aan $58$, is dus niet compatibel met de geobserveerde data. Je verwerpt bijgevolg de nulhypothese op het $`r alpha*100`\%$ significantieniveau.
+
+<br>
+
+------------
+
+# Conclusie 
+
+Je verwerpt de nulhypothese op het $`r alpha*100`\%$ significantieniveau.
+
+<br>
