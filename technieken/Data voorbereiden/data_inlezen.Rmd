@@ -1,0 +1,325 @@
+---
+title: "Data inlezen in R"
+output:
+  html_document: 
+    number_sections: true
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    css: statlas_data_inlezen.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment='', 
+                      prompt=FALSE, 
+                      class.source="r-chunk", 
+                      class.output="chunk-output",
+                      eval=FALSE)
+```
+
+```{r, include=FALSE, eval=TRUE}
+library(xfun)            # embed files in webpage, see https://bookdown.org/yihui/rmarkdown-cookbook/embed-file.html
+library(readxl)
+library(openxlsx)
+library(foreign)
+```
+
+\
+
+------------------------
+
+\
+
+Op deze pagina vind je enkele demonstraties van hoe je data kan inlezen in R en RStudio.
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://statlas.ugent.be/_book/" target="_blank">hier</a>.
+
+\
+
+------------------
+
+# Doel
+
+Data vormen de grondstof waarmee onderzoekers aan de slag gaan. Deze data zijn vaak in tabellen georganiseerd, die bestaan uit rijen en kolommen. Deze tabellen kunnen opgeslagen zijn in de vorm van verschillende bestandstypes: er bestaan onder meer csv-bestanden, Excelbestanden, data afkomstig uit SPSS en nog meer. Je herkent het type van elk bestand aan de extensie, dat wil zeggen de drie letters aan het einde van de bestandsnaam, na het punt.^[Een extensie kan soms wat korter of langer zijn dan drie letters.] Bijvoorbeeld, bestanden van het type "csv" herken je aan het feit dat de bestandsnaam eindigt op ".csv".
+
+Hieronder bespreken we de <b>meest voorkomende bestandstypes</b> en de <b>functies</b> die je kan gebruiken om ze in te lezen in R.
+
+In de verschillende demonstraties zullen we steeds dezelfde dataset inlezen, maar telkens vanuit een verschillend bestandstype. Het doel is elke keer om een dataframe te bekomen dat beschikbaar is voor analyse in R. 
+
+In sommige demonstraties bespreken we een beperkt aantal vaak voorkomende problemen bij het inladen. Als je een probleem ervaart dat hier niet besproken wordt, dan heb je nog verschillende opties om een oplossing te vinden. Eerst kan je de hulppagina van een functie oproepen door een vraagteken `?` voor de naam van de functie te plaatsen, zoals hieronder. In het tabblad "Help" rechts onderaan in RStudio verschijnt dan een algemene beschrijving van de functie en wat uitleg bij elk argument dat je aan de functie kan meegeven.
+
+```{r}
+?read.csv
+```
+
+Vind je het antwoord daar niet, dan is het aangeraden om je probleem te googlen of om een AI-chatbot te raadplegen. Kopieer bijvoorbeeld de eventuele "error" boodschap die R je geeft en ga op basis daarvan op zoek.
+
+\
+
+------------------
+
+# De dataset
+
+De dataset `enquete` bevat gegevens van 14 variabelen geobserveerd bij 42 Amerikaanse studenten die een vak statistiek volgen. Deze dataset is gebaseerd op een dataset die <a href='https://vincentarelbundock.github.io/Rdatasets/doc/Stat2Data/Day1Survey.html' target='_blank'>hier</a> wordt beschreven. 
+
+In elke demonstratie tonen we hoe je data kan inladen uit een bestand dat zich in de "working directory" op je computer bevindt. Die working directory kan je zelf kiezen met de functie `setwd()`. Meer info vind je <a href="https://statlas.ugent.be/_book/08-Je-werk-opslaan.html" target="_blank">hier</a> vanaf onderdeel 8.1.3.
+
+Als je de code op deze pagina zelf wil uitvoeren zal je de verschillende databestanden lokaal moeten opslaan (bij voorkeur dus in de working directory). De bestanden kan je hieronder downloaden. Door op de laatste link te klikken kan je ze allemaal samen downloaden in de vorm van een zip-bestand. 
+
+\
+
+<div class='grid-container'>
+
+<div class='grid-item'>
+
+```{r, eval=TRUE, echo=FALSE}
+embed_file('enquete_inlezen.csv')
+```
+
+</div>
+
+<div class='grid-item'>
+
+```{r, eval=TRUE, echo=FALSE}
+embed_file('enquete_inlezen.txt')
+```
+
+</div>
+
+<div class='grid-item'>
+
+```{r, eval=TRUE, echo=FALSE}
+embed_file('enquete_inlezen.xlsx')
+```
+
+</div>
+
+<div class='grid-item'>
+
+```{r, eval=TRUE, echo=FALSE}
+embed_file('enquete_inlezen.sav')
+```
+
+</div>
+
+<div class='grid-item'>
+
+```{r, eval=TRUE, echo=FALSE}
+embed_dir('./enquete_inlezen')
+```
+
+</div>
+
+</div>
+
+\
+
+------------------
+
+# csv
+
+De afkorting csv staat voor "comma-separated values". Bij deze databestanden eindigt de naam op ".csv". (Afhankelijk van je instellingen zie je die extensie misschien niet uitdrukkelijk vermeld staan in de map op je computer). 
+
+De dataset kan je inladen met de functie `read.csv()`. De data breng je best meteen onder in een object `enquete` zodat je ze later makkelijk opnieuw kan oproepen.
+
+Als het bestand zich in je working directory bevindt, dan volstaat het om de naam van het bestand te geven aan de functie `read.csv()`. Vergeet de aanhalingstekens niet.
+
+```{r}
+enquete <- read.csv('enquete_inlezen.csv')
+```
+
+\
+
+Als het bestand zich niet in je working directory bevindt, dan moet je het volledige "pad" meegeven. Dit pad is verschillend voor iedereen. Let ook op de "forward slashes" `/`. In een Microsoft Windows-omgeving wordt een pad naar een bestand genoteerd met "back slashes" `\`. Als je in die omgeving werkt dan moet je het pad nog veranderen zodat er enkel `/` in voorkomen.
+
+```{r}
+enquete <- read.csv('C:/Users/jjanssens/OneDrive - UGent/Documenten/R/mijn-map-met-data/enquete_inlezen.csv')
+```
+
+\
+
+Het is ook mogelijk om een csv-bestand rechtstreeks van het internet in te laden. Je hoeft het dan niet te downloaden naar je working directory. Om dat te doen geef je de url (een adres op het internet) aan de functie `read.csv()`, zoals in het voorbeeld hieronder.
+
+```{r}
+enquete <- read.csv('https://statlas.ugent.be/datasets/enquete_inlezen.csv')
+```
+
+\
+
+## Potentiële moeilijkheden {-}
+
+<ul>
+<li><b>Probleem</b>: Alle gegevens komen in 1 kolom terecht in plaats van 1 kolom per variabele.
+<br>
+<b>Oplossing</b>: 
+<ol>
+<li> Ook al lijkt de "c" in "csv" heel duidelijk, toch zijn niet alle csv-bestanden opgebouwd met een komma tussen de verschillende kolommen/variabelen. Soms wordt een puntkomma `;` gebruikt of uitzonderlijk nog een ander karakter. Dit probleem kan je verhelpen door het argument `sep` toe te voegen aan de functie `read.csv()`.
+
+```{r}
+enquete <- read.csv('enquete_inlezen.csv', sep=';')
+```
+
+
+<li> Een andere mogelijke verklaring ligt bij Microsoft Excel (voor Windows gebruikers) of Numbers (voor Mac OS gebruikers). Als je een csv-bestand opent in een van die programma's, dan wordt het bestand nadien opgeslagen met subtiele wijzigingen. Deze veranderingen maken het nadien quasi-onmogelijk om de data in te laden in RStudio. De oplossing ligt voor de hand: na het downloaden mag je het bestand niet openen met Excel of Numbers.
+</ol>
+
+\
+
+<li> <b>Probleem</b>: In de meeste datasets wordt een punt `.` gebruikt als decimaal teken (om cijfers voor en na de komma van elkaar te scheiden). Het kan echter gebeuren dat hiervoor een komma `,` wordt gebruikt.
+<br>
+<b>Oplossing</b>: Voeg het argument `dec=','` toe aan de functie. Merk wel op dat een dataset natuurlijk onmogelijk een komma kan hebben als "separator" tussen de kolommen <i>en</i> als decimaal teken. Het zal dus enkel zin hebben om het argument `dec=','` toe te voegen als er bijvoorbeeld ook `sep=';'` staat. 
+
+```{r}
+enquete <- read.csv('enquete_inlezen.csv', sep=';', dec=',')
+```
+
+Je kan ook de functie `read.csv2()` gebruiken. Daar zijn `sep=';'` en `dec=','` automatisch al ingevuld zodat je het niet zelf hoeft te doen.
+
+Deze manier van werken is vaak nodig in een Belgische context, omdat hier de gewoonte bestaat om een komma te gebruiken als decimaal teken in computers. 
+
+</ul>
+
+\
+
+--------------------
+
+# txt
+
+Data kunnen voorkomen in de vorm van een eenvoudig tekstbestand, met extensie ".txt" achter de naam. Data in dit bestandstype kan je inladen met de functie `read.table()`. Met het argument `header=TRUE` vertellen we aan R dat de eerste rij van het txt-bestand de namen van de kolommen/variabelen bevat. Als dat niet het geval is in jouw dataset, dan kan je dit uiteraard weglaten. De ingelezen data breng je best meteen onder in een object `enquete` zodat je ze later makkelijk opnieuw kan oproepen. 
+
+```{r}
+enquete <- read.table('enquete_inlezen.txt', header=TRUE)
+```
+
+\
+
+Net als bij de functie `read.csv()` is het ook mogelijk om data rechtstreeks van een url in te laden.
+
+```{r}
+enquete <- read.table('https://statlas.ugent.be/datasets/enquete_inlezen.txt', header=TRUE)
+```
+
+\
+
+Terzijde geven we mee dat de functie `read.table()` een meer algemene versie is van `read.csv()`.^[Of om de juiste terminologie te gebruiken: `read.csv()` is een "wrapper" van `read.table()`.] Daarmee bedoelen we dat bij het aanroepen van de functie `read.csv()` achter de schermen eigenlijk `read.table()` wordt aangeroepen, maar dan met een aantal argumenten reeds gespecifieerd. Zo is bij `read.csv()` standaard gekozen voor een komma `,` als scheidingsteken (argument `sep`) tussen variabelen/kolommen. Als je dataset inderdaad komma's bevat tussen de kolommen, dan zullen ze dus automatisch correct worden ingelezen. Iets gelijkaardig geldt voor het argument `header`. Bij `read.csv()` is dit standaard gelijkgesteld aan `TRUE` wat betekent dat R ervan uitgaat dat de eerste rij in het bestand de namen van de variabelen bevat. Bij `read.table()` wordt standaard de eerste rij in het bestand geïnterpreteerd als deel van de data zelf.
+
+Om dat laatste te verduidelijken kan je onderstaande code uitvoeren.
+
+```{r, eval=TRUE}
+enquete <- read.table('enquete_inlezen.txt')
+head(enquete) # toont de eerste zes rijen van het dataframe
+```
+
+<p id='inspect'>R heeft automatisch kolomnamen `V1`, `V2`, `V3`, enzovoort toegevoegd aan het dataframe. Op de eerste rij zie je telkens de eigenlijke namen van de variabelen. Doordat bij de kwantitatieve variabelen nu een woord op de eerste rij staat zal R ook het datatype van die kolom automatisch veranderen. `Hartslag` is in principe natuurlijk kwantitatief van aard, maar wanneer we de functie `class()` aanroepen krijgen we nu `character` als output.</p>
+
+```{r, eval=TRUE}
+class(enquete$V13)
+```
+
+\
+
+--------------------
+
+# xlsx (Microsoft Excel)
+
+Het programma Microsoft Excel kent een specifiek bestandstype om data op te slaan. Deze bestanden eindigen op ".xlsx" of vroeger op ".xls". Deze bestanden zijn ontworpen om gebruikt te worden in Excel.
+
+Het is mogelijk om deze data in te laden in R, maar hiervoor zal je een specifiek package nodig hebben, met name `openxlsx`.^[Een alternatief package is `read_xl`.]
+
+```{r}
+install.packages('openxlsx') # eenmalig het package installeren
+library(openxlsx) # het package laden voor gebruik
+```
+
+\
+
+Als het package `openxlsx` geladen is, dan is de functie `read_xlsx()` beschikbaar. Je geeft eenvoudigweg de bestandsnaam aan de functie. De ingelezen data breng je best meteen onder in een object `enquete` zodat je ze later makkelijk opnieuw kan oproepen. 
+
+```{r}
+enquete <- read_xlsx('enquete_inlezen.xlsx')
+```
+
+\
+
+Net als bij `read.csv()` is het ook mogelijk om met `read_xlsx()` data in te laden met een url. 
+
+```{r}
+enquete <- read_xlsx('https://statlas.ugent.be/datasets/enquete_inlezen.xlsx')
+```
+
+\
+
+Een Excelbestand kan soms meerdere "sheets" of "bladen" bevatten. Als de data die jij wil inladen bijvoorbeeld op het tweede sheet staan, dan vul je de code aan met het argument `sheet=2`.
+
+```{r}
+enquete <- read_xlsx('enquete_inlezen.xlsx', sheet=2)
+```
+
+\
+
+Het gebeurt ook dat de data niet vanaf de eerste rij starten in het Excelbestand. Als de data in jouw Excelbestand bijvoorbeeld starten vanaf de vijfde rij, voeg je het argument `startRow=5` toe.
+
+```{r}
+enquete <- read_xlsx('enquete_inlezen.xlsx', startRow=5)
+```
+
+\
+
+--------------------
+
+# sav (SPSS)
+
+Databestanden waarvan de naam eindigt op ".sav" zijn afkomstig uit SPSS, een wat achterhaald programma voor data-analyse dat vooral vroeger populair was. Deze sav-bestanden zijn specifiek ontworpen om gebruikt te worden in SPSS.
+
+Om data uit zo'n bestand in te lezen in R kan je het package `foreign` gebruiken.^[Een alternatief package is `haven`.]
+
+```{r}
+install.packages('foreign') # eenmalig het package installeren
+library(foreign) # het package laden voor gebruik
+```
+
+\
+
+De functie `read.spss()` is nu beschikbaar. De ingelezen data breng je best meteen onder in een object `enquete` zodat je ze later makkelijk opnieuw kan oproepen. Het argument `to.data.frame` moet je zelf de waarde `TRUE` geven. Doe je dat niet, dan zal het object `enquete` geen dataframe zijn.^[Het zal meer bepaald een "list" zijn.]
+
+```{r}
+enquete <- read.spss('enquete_inlezen.sav', to.data.frame=TRUE)
+```
+
+\
+
+Ook hier is het mogelijk om data rechtstreeks van een url in te laden.
+
+```{r}
+enquete <- read.spss('https://statlas.ugent.be/datasets/enquete_inlezen.sav', to.data.frame=TRUE)
+```
+
+\
+
+---------------------
+
+# Data inspecteren
+
+Het is vaak een goed idee om na te gaan of de data goed zijn ingeladen vooraleer je ermee aan de slag gaat. Dat merkten we <a href='#inspect'>hierboven</a> al bij `read.table()`. Er bestaan veel functies die je toelaten om een dataset te inspecteren. De meest nuttige zijn waarschijnlijk `head()` en `str()`.
+
+Om de eerste zes rijen van de dataset te zien gebruik je `head()`.
+
+```{r}
+head(enquete)
+```
+
+\
+
+Voor iets meer detail kan je `str()` gebruiken. In de output zie je dan een opsomming van de kolommen/variabelen met het datatype erbij en ook de eerste vier of vijf waarden.
+
+```{r}
+str(enquete)
+```
+
+\
+
+Als je in de output van `head()` en/of `str()` inderdaad ziet wat je had verwacht, dan kan je verder met de volgende stappen van je analyse.
+
+\
