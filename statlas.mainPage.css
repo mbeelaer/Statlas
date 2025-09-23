@@ -1,117 +1,114 @@
 /* Font UGent Panno */
 
 @font-face {
-    font-family: "Ugent-panno";
-    src: url('ugentpannotext-normal-web.ttf'), url('ugentpannotext-normal-web.eot');
+  font-family: "Ugent-panno";
+  src: url("ugentpannotext-normal-web.ttf"),
+    url("ugentpannotext-normal-web.eot");
 }
-
 
 /* Flexbox */
 
 .flexbox-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .horizontal {
-    flex-direction: row;
+  flex-direction: row;
 }
 
 .vertical {
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: space-around;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: space-around;
 }
 
 .flexbox-container2 {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    /* alignment op main axis (zie flex-direction) kan ook center of flex-end of space-between of space-around*/
-    align-items: flex-start;
-    /* alignment op secondary axis kan ook center of stretch */
-    /* align-content is er ook nog*/
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* alignment op main axis (zie flex-direction) kan ook center of flex-end of space-between of space-around*/
+  align-items: flex-start;
+  /* alignment op secondary axis kan ook center of stretch */
+  /* align-content is er ook nog*/
 }
 
 .flexbox-item {
-    font-family: UGent-panno;
-    margin: 10px;
-    flex-shrink: 1;
-    flex-basis: 15%;
+  font-family: UGent-panno;
+  margin: 10px;
+  flex-shrink: 1;
+  flex-basis: 15%;
 }
 
 .flexbox-item-5 {
-    min-height: 100px;
-    align-self: flex-end;
-    /* overrides algemene alignment */
-    flex: 1 0 10px;
-    /* equivalent aan resp. flex-grow, flex-shrink en flex-basis */
+  min-height: 100px;
+  align-self: flex-end;
+  /* overrides algemene alignment */
+  flex: 1 0 10px;
+  /* equivalent aan resp. flex-grow, flex-shrink en flex-basis */
 }
-
 
 /* Pagina navigatie */
 
 .pagina {
-    display: none;
-    line-height: 1.5;
+  display: none;
+  line-height: 1.5;
 }
 
 button.navlink {
-    float: left;
-    display: inline;
-    background-color: #1e64c8;
-    color: #fff;
-    padding: 0 0 0 20px;
-    border: none;
-    font-size: large;
-    text-decoration: underline;
+  float: left;
+  display: inline;
+  background-color: #1e64c8;
+  color: #fff;
+  padding: 0 0 0 20px;
+  border: none;
+  font-size: large;
+  text-decoration: underline;
 }
 
 button.navlink:hover {
-    color: #ddd;
-    cursor: pointer;
+  color: #ddd;
+  cursor: pointer;
 }
-
 
 /* Tekst */
 
 .titel {
-    font-size: xx-large;
-    color: #fff;
-    padding: 10px;
+  font-size: xx-large;
+  color: #fff;
+  padding: 10px;
 }
 
 h1 {
-    font-family: Arial, Verdana, sans-serif;
-    font-size: 22px;
-    padding-top: 10px;
-    padding-bottom: 5px;
-    color: #1e64c8;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 22px;
+  padding-top: 10px;
+  padding-bottom: 5px;
+  color: #1e64c8;
 }
 
 h2 {
-    color: #FB7E3A;
-    font-family: Arial, Verdana, sans-serif;
-    font-size: 18px;
-    padding-top: 10px;
-    padding-bottom: 5px;
+  color: #fb7e3a;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 18px;
+  padding-top: 10px;
+  padding-bottom: 5px;
 }
 
 span {
-    font-family: Ugent-panno, Arial, Helvetica, sans-serif;
-    justify-content: center;
-    align-items: center;
-    white-space: nowrap;
+  font-family: Ugent-panno, Arial, Helvetica, sans-serif;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
 }
 
 p {
-    font-family: Arial, Helvetica, sans-serif;
-    justify-content: center;
-    align-items: center;
+  font-family: Arial, Helvetica, sans-serif;
+  justify-content: center;
+  align-items: center;
 }
-
 
 /* img {
     width: fit-content;
@@ -119,52 +116,51 @@ p {
 } */
 
 a {
-    text-decoration: underline;
-    display: inline;
-    color: #1e64c8;
+  text-decoration: underline;
+  display: inline;
+  color: #1e64c8;
 }
 
 a:hover {
-    color: #1e64c870;
-    cursor: pointer;
+  color: #1e64c870;
+  cursor: pointer;
 }
 
 .nav-venster {
-    background-color: #1e64c8;
-    font-family: Ugent-panno, Arial, Verdana, sans-serif;
-    flex-basis: 30px;
-    flex-grow: 4;
-    height: 120px;
+  background-color: #1e64c8;
+  font-family: Ugent-panno, Arial, Verdana, sans-serif;
+  flex-basis: 30px;
+  flex-grow: 4;
+  height: 120px;
 }
 
 .logo {
-    flex-basis: 15px;
-    flex-grow: 1;
-    max-height: 120px;
+  flex-basis: 15px;
+  flex-grow: 1;
+  max-height: 120px;
 }
 
 #logo-ugent {
-    background-image: url(./logo_UGent_NL_RGB_0144_kleur.png);
-    background-size: cover;
-    background-color: #fff;
-    border: none;
-    width: 150px;
-    height: 120px;
+  background-image: url(./logo_UGent_NL_RGB_0144_kleur.png);
+  background-size: cover;
+  background-color: #fff;
+  border: none;
+  width: 150px;
+  height: 120px;
 }
 
 #logo-ugent:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
-
 #footer {
-    position: fixed;
-    bottom: 1px;
-    background-color: #eee;
-    border-radius: 5px 5px 0 0;
-    z-index: 2;
-    margin-bottom: 0;
-    /* box-shadow: 2px -2px 2px #00000010; */
+  position: fixed;
+  bottom: 1px;
+  background-color: #eee;
+  border-radius: 5px 5px 0 0;
+  z-index: 2;
+  margin-bottom: 0;
+  /* box-shadow: 2px -2px 2px #00000010; */
 }
 
 /* #footer:hover {
@@ -173,59 +169,55 @@ a:hover {
 } */
 
 #logo-fppw {
-    /* background-image: url(./icoon_UGent_PP_NL_RGB_0144_kleur.png); */
-    /* background-size: auto; */
-    background-color: #eee;
-    border: none;
-    max-width: 100%;
-    height: 100%;
-    opacity: 60%;
+  /* background-image: url(./icoon_UGent_PP_NL_RGB_0144_kleur.png); */
+  /* background-size: auto; */
+  background-color: #eee;
+  border: none;
+  max-width: 100%;
+  height: 100%;
+  opacity: 60%;
 }
 
 #logo-fppw:hover {
-    cursor: pointer;
-    opacity: 100%;
+  cursor: pointer;
+  opacity: 100%;
 }
 
 #logo-pp01 {
-    /* background-image: url(./icoon_UGent_PP_NL_RGB_0144_kleur.png); */
-    /* background-size: auto; */
-    background-color: #eee;
-    border: none;
-    max-width: 100%;
-    height: 100%;
-    opacity: 60%;
+  /* background-image: url(./icoon_UGent_PP_NL_RGB_0144_kleur.png); */
+  /* background-size: auto; */
+  background-color: #eee;
+  border: none;
+  max-width: 100%;
+  height: 100%;
+  opacity: 60%;
 }
 
 #logo-pp01:hover {
-    cursor: pointer;
-    opacity: 100%;
+  cursor: pointer;
+  opacity: 100%;
 }
 
 div.hoofdtekst {
-    background-color: #fff;
-    font-family: Arial, Verdana, sans-serif;
-    width: 80%;
-    flex-basis: 30px;
-    flex-grow: 4;
-    margin: 50px 20% 0 20%;
-    z-index: 1;
+  background-color: #fff;
+  font-family: Arial, Verdana, sans-serif;
+  width: 80%;
+  flex-basis: 30px;
+  flex-grow: 4;
+  margin: 50px 20% 0 20%;
+  z-index: 1;
 }
 
-div.hoofdtekst>p {
-    padding-right: 200px;
+div.hoofdtekst > p {
+  padding-right: 200px;
 }
-
-
 
 .whitespace-bottom {
-    background-color: #fff;
-    height: 150px;
+  background-color: #fff;
+  height: 150px;
 }
 
-
 /* Tabel met enkel interne borders */
-
 
 /* table {
     border-collapse: collapse;
@@ -237,87 +229,83 @@ th {
     border: 1px solid black;
 } */
 
-
-
 .categorie {
-    background-color: #ffd20030;
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 20px 15px;
-    margin: 0 0 2px 0;
-    cursor: pointer;
-    width: 80%;
-    box-sizing: border-box;
-    /* font-family: Arial, Helvetica, sans-serif; */
-    text-align: left;
+  background-color: #ffd20030;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 20px 15px;
+  margin: 0 0 2px 0;
+  cursor: pointer;
+  width: 80%;
+  box-sizing: border-box;
+  /* font-family: Arial, Helvetica, sans-serif; */
+  text-align: left;
 }
 
 .categorie:hover {
-    background-color: #ffd20045;
+  background-color: #ffd20045;
 }
 
 .categorie span {
-    text-align: left;
-    font-size: large;
-    font-family: Arial, Helvetica, sans-serif;
+  text-align: left;
+  font-size: large;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .colname {
-    background-color: #1E64C820;
+  background-color: #1e64c820;
 }
-
 
 #grid-container1 {
-    display: none;
+  display: none;
 }
 
-
 #grid-container2 {
-    display: none;
+  display: none;
 }
 
 #grid-container3 {
-    display: none;
+  display: none;
 }
 
 #grid-container4 {
-    display: none;
+  display: none;
 }
 
 .grid-container {
-    display: none;
-    /* define rows and columns, use px or fractional unit or ...*/
-    /* fr works like flex-grow in flexbox */
-    grid-template-columns: 2fr 5fr;
-    grid-auto-rows: minmax(20px, auto);
-    /* size is at least 20px, but will grow depending on content: */
-    /*  */
-    /* spacing between items */
-    grid-gap: 2px;
-    /* grid-row-gap: 40px; */
-    /* oppervlakten doen samensmelten, i.c. griditem met 'grid-area: bigitem' neemt tweede en derde cellen in */
-    /* grid-template-areas: "none none none none" "whitespace whitespace whitespace whitespace" "bigitem bigitem bigitem bigitem"; */
-    max-width: 80%;
-    max-height: 0px;
-    overflow: hidden;
-    transition: max-height 0.5s ease-in-out;
+  display: none;
+  /* define rows and columns, use px or fractional unit or ...*/
+  /* fr works like flex-grow in flexbox */
+  grid-template-columns: 2fr 5fr;
+  /* grid-auto-rows: minmax(20px, auto); */
+  /* size is at least 20px, but will grow depending on content: */
+  /*  */
+  /* spacing between items */
+  grid-gap: 2px;
+  /* grid-row-gap: 40px; */
+  /* oppervlakten doen samensmelten, i.c. griditem met 'grid-area: bigitem' neemt tweede en derde cellen in */
+  /* grid-template-areas: "none none none none" "whitespace whitespace whitespace whitespace" "bigitem bigitem bigitem bigitem"; */
+  max-width: 80%;
+  max-height: 0px;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
 }
 
 .grid-item {
-    border: 2px solid black;
-    padding: 8px 15px;
-    font-family: Arial, Verdana, sans-serif;
+  border: 2px solid black;
+  padding: 8px 15px;
+  font-family: Arial, Verdana, sans-serif;
+  height: auto;
 }
 
-
 .techniek {
-    display: none;
+  display: none;
 }
 
 .grid-item-1 {
-    background-color: #1E64C820;
+  background-color: #1e64c820;
 }
 
 .grid-item-2 {
-    background-color: #1E64C820;
+  background-color: #1e64c820;
 }
