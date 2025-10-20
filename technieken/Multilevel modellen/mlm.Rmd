@@ -52,7 +52,7 @@ Het voorbeeld op deze pagina is afkomstig van een <a href='#Referentie1'>studie 
 
 # Het voorbeeld op deze pagina
 
-<a href='#Referentie1'>Bogaert et al. (2025)</a> onderzoeken de impact van een interventie op verschillende leesvaardigheden van leerlingen. Hun studie is gemotiveerd door de vaststelling dat leesvaardigheden vaak onvoldoende ontwikkeld zijn bij leerlingen in de latere jaren van het basisonderwijs. Bovendien zijn er onbeantwoorde vragen over welke lesmethoden effectief zouden kunnen zijn bij het verbeteren van de leesvaardigheden van leerlingen. Studies die uitzoeken of interventies op klasniveau zouden kunnen werken zijn bijzonder schaars. De auteurs hadden de intentie om die lacune in de bestaande wetenschappelijke literatuur te verhelpen.
+<a href='#Referentie1'>Bogaert et al. (2025)</a> onderzoeken de impact van een interventie op verschillende maten van leesvaardigheid van leerlingen. Hun studie is gemotiveerd door de vaststelling dat leesvaardigheden vaak onvoldoende ontwikkeld zijn bij leerlingen in de latere jaren van het basisonderwijs. Bovendien zijn er onbeantwoorde vragen over welke lesmethoden effectief zouden kunnen zijn bij het verbeteren van de leesvaardigheden van leerlingen. Studies die uitzoeken of interventies op klasniveau zouden kunnen werken zijn bijzonder schaars. De auteurs hadden de intentie om die lacune in de bestaande wetenschappelijke literatuur te verhelpen.
 
 \
 
@@ -84,22 +84,42 @@ Op het eerste zicht lijkt dit een vraag die kan worden beantwoord aan de hand va
 
 Om te begrijpen waarom klassieke lineaire regressie hier niet geschikt is moeten we focussen op de manier waarop de data zijn verzameld. In Bogaert et al. (2025) werden willekeurig scholen geselecteerd en vervolgens klassen in die scholen en daarna werden leerlingen binnen die klassen getest. De data zijn met andere woorden hiërarchisch gestructureerd, in dit geval met drie niveaus: scholen, klassen en individuele leerlingen. Voor deze inleidende demonstratie zullen we de context wat vereenvoudigen naar een <b>structuur met twee niveaus</b>: we gaan ervan uit dat willekeurige klassen werden geselecteerd en dat vervolgens leerlingen binnen die klassen werden getest.
 
-Als onderzoeker zou je kunnen vermoeden dat de uitkomst (testscores `BL_posttest`) geclusterd is per klas. <b>Clustering</b> betekent dat de scores binnen klassen meer op elkaar lijken dan wanneer je de scores over alle klassen heen zou beschouwen. Op basis van de klas waartoe een leerling behoort zou je dus al iets kunnen zeggen over de score die die leerling behaalt op de test `BL_posttest`. Er zou met andere woorden een "klaseffect" zijn op de testscore.^[In klassieke lineaire regressie maken we de assumptie van onafhankelijke observaties. Wanneer de data geclusterd zijn is deze assumptie geschonden.]
+Als onderzoeker zou je kunnen vermoeden dat de uitkomst (testscores `BL_posttest`) geclusterd is per klas. <b>Clustering</b> betekent dat de scores binnen klassen meer op elkaar lijken dan wanneer je de scores over alle klassen heen zou beschouwen. Op basis van de klas waartoe een leerling behoort zou je dus al iets kunnen zeggen over de score die die leerling behaalt op de test (`BL_posttest`). Er zou met andere woorden een "klaseffect" zijn op de testscore.^[In klassieke lineaire regressie maken we de assumptie van onafhankelijke observaties. Wanneer de data geclusterd zijn is deze assumptie geschonden.]
 
-Als die clustering inderdaad aanwezig blijkt te zijn in de data, dan kan dit relevant zijn bij het beantwoorden van de onderzoeksvraag. De interesse van de onderzoekers gaat uit naar het effect van `Conditie` op `BL_posttest`, maar de variabele `Klas` kan een confounder zijn voor dit effect. Als we een zuiver beeld willen van het effect van `Conditie` op de `BL_posttest`, dan moeten we <b>controleren voor dit klaseffect</b>. De doelstelling is dezelfde als die van statistische controle bij lineaire regressie. Er zijn echter goede redenen om het niet op die klassieke manier aan te pakken.
+<!-- Als die clustering inderdaad aanwezig blijkt te zijn in de data, dan kan dit relevant zijn bij het beantwoorden van de onderzoeksvraag. De interesse van de onderzoekers gaat uit naar het effect van `Conditie` op `BL_posttest`, maar de variabele `Klas` kan een confounder zijn voor dit effect. Als we een zuiver beeld willen van het effect van `Conditie` op de `BL_posttest`, dan moeten we <b>controleren voor dit klaseffect</b>. De doelstelling is dezelfde als die van statistische controle bij lineaire regressie. Er zijn echter goede redenen om het niet op die klassieke manier aan te pakken. -->
 
-Een belangrijke reden is dat `Klas` geen echte categorische variabele is. Bij een categorische variabele (denk aan "geslacht") zijn de mogelijke waarden beperkt tot een afgebakende verzameling opties ("man" en "vrouw"). In het geval van `Klas` daarentegen zijn er evenveel mogelijke waarden als er klassen zijn. De mogelijke waarden zijn eigennamen die elke klas uniek identificeren, bv. "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare". De dataset zal bijna altijd maar een willekeurige greep uit alle mogelijke klassen bevatten. Daar komt nog bij dat de dataset heel veel klassen kan bevatten. Daardoor zou het lineaire regressiemodel heel veel parameters bevatten waar we niet echt in geïnteresseerd zijn, maar die wel moeten worden geschat. Bijvoorbeeld, het effect van in klas "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare" te zitten in vergelijking met het referentieniveau "het 5e studiejaar van Vrije Basisschool De Klimop in Sint-Gillis-Waas". Analoog zou je het effect moeten schatten voor alle klassen in je dataset. Dat zouden we moeten doen om de statistische controle te kunnen uitvoeren, niet omdat al die effecten ons inhoudelijk interesseren. Dat is geen efficiënt gebruik van de data, die beter zouden worden gespendeerd aan het verbeteren van de power van de toets waar we wel in geïnteresseerd zijn, in dit geval de toets van het effect van `Conditie`. 
+De mogelijke aanwezigheid van een klaseffect kan relevant zijn bij het beantwoorden van de onderzoeksvraag. De interesse van de onderzoekers gaat uit naar het effect van `Conditie` op `BL_posttest`. Als we een zuiver beeld willen van dit effect, dan moeten we <b>controleren voor het klaseffect</b>. De doelstelling is dezelfde als die van statistische controle bij lineaire regressie. Er zijn echter goede redenen om het niet op die klassieke manier aan te pakken.
 
-Een <b>betere manier om te controleren voor het klaseffect</b> is door een assumptie toe te voegen aan het model, namelijk dat elke klas een eigen random intercept heeft, dat normaal verdeeld is. Deze nieuwe benadering laat toe om statistisch te controleren voor het klaseffect. We krijgen schattingen van het <i>onafhankelijke</i> effect van `Conditie` op `BL_posttest`. Bovendien gebeurt dit efficiënt, want het is niet meer nodig om voor elke school een aparte parameter te schatten voor het effect van die specifieke klas.
+<!-- Een belangrijke reden is dat `Klas` geen echte categorische variabele is. Bij een categorische variabele (denk aan "geslacht") zijn de mogelijke waarden beperkt tot een afgebakende verzameling opties ("man" en "vrouw"). In het geval van `Klas` daarentegen zijn er evenveel mogelijke waarden als er klassen zijn. De mogelijke waarden zijn eigennamen die elke klas uniek identificeren, bv. "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare". De dataset zal bijna altijd maar een willekeurige greep uit alle mogelijke klassen bevatten. Daar komt nog bij dat de dataset heel veel klassen kan bevatten. Daardoor zou het lineaire regressiemodel heel veel parameters bevatten waar we niet echt in geïnteresseerd zijn, maar die wel moeten worden geschat. Bijvoorbeeld, het effect van in klas "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare" te zitten in vergelijking met het referentieniveau "het 5e studiejaar van Vrije Basisschool De Klimop in Sint-Gillis-Waas". Analoog zou je het effect moeten schatten voor alle klassen in je dataset. Dat zouden we moeten doen om de statistische controle te kunnen uitvoeren, niet omdat al die effecten ons inhoudelijk interesseren. Dat is geen efficiënt gebruik van de data, die beter zouden worden gespendeerd aan het verbeteren van de power van de toets waar we wel in geïnteresseerd zijn, in dit geval de toets van het effect van `Conditie`.  -->
+
+De belangrijkste reden is dat de niveaus van de categorische variabele `Klas` op een willekeurige wijze aanwezig zijn in de data. Dat is een direct gevolg van de manier waarop de steekproef tot stand is gekomen: de klassen zijn willekeurig getrokken uit alle mogelijke klassen. De waarden van `Klas` die in een steekproef voorkomen zijn een willekeurige greep uit alle mogelijke waarden. In jouw steekproef zal misschien "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare" wel aanwezig zijn en "het 5e studiejaar van Vrije Basisschool De Klimop in Sint-Gillis-Waas" niet. In een andere steekproef zou het omgekeerd kunnen zijn.
+
+Dat is natuurlijk heel verschillend van wat je gewoon bent bij categorische variabelen. Bijvoorbeeld, bij een variabele als `Opleidingsniveau` met 4 niveaus zal je niet een willekeurige trekking van die niveaus nemen, om vervolgens binnen elk getrokken niveau willekeurig individuen te trekken. 
+
+Doordat de niveaus van `Klas` willekeurig getrokken zijn, zijn ook de effecten die geassocieerd zijn met die niveaus willekeurig. Het zijn met andere woorden <b>random effecten</b>. Als je in een dergelijke context een klassiek lineair regressiemodel zou fitten, dan kan je je conclusies maar in beperkte mate generaliseren. Je conclusies gelden voor alle leerlingen <i>binnen de specifieke getrokken klassen</i>.^[In sommige situaties is dat niet erg. Denk bijvoorbeeld aan PISA-studies, waar het niet altijd noodzakelijk is om te veralgemenen naar andere landen dan degene die opgenomen zijn.] Een multilevel model daarentegen laat toe om je conclusies wél te generaliseren naar alle leerlingen <i>in alle klassen</i>.
 
 \
 
-Kort samengevat, bouw en fit multilevel modellen met random intercepten
+Een bijkomende reden om voor een multilevel model te kiezen is efficiënt gebruik van de data. De dataset kan heel veel klassen bevatten. Daardoor zou een lineair regressiemodel heel veel parameters bevatten waar we niet echt in geïnteresseerd zijn, maar die wel moeten worden geschat. Bijvoorbeeld, het effect van in klas "het 6e studiejaar van Stedelijke Basisschool De Brug in Roeselare" te zitten in vergelijking met het referentieniveau. Analoog zou je het effect moeten schatten voor alle klassen in je dataset. Dat zouden we moeten doen om de statistische controle te kunnen uitvoeren, niet omdat al die effecten ons inhoudelijk interesseren. Dat is geen efficiënt gebruik van de data, die beter zouden worden gespendeerd aan het verbeteren van de power van de toets waar we wel in geïnteresseerd zijn, in dit geval de toets van het effect van `Conditie`.
 
-<ul>
-<li> wanneer je een uitkomstvariabele wil modelleren die is gemeten op een bepaald niveau. Hier gaat het om `BL_posttest`, gemeten op het niveau van de individuele leerlingen.
-<li> wanneer deze uitkomstvariabele (deels) geclusterd is op een hoger niveau. In dit voorbeeld is `BL_posttest` mogelijk geclusterd op het klasniveau.
-</ul>
+<!-- Een <b>betere manier om te controleren voor het klaseffect</b> is door een assumptie toe te voegen aan het model, namelijk dat elke klas een eigen random intercept heeft, dat normaal verdeeld is. Deze nieuwe benadering laat toe om statistisch te controleren voor het klaseffect. We krijgen schattingen van het <i>onafhankelijke</i> effect van `Conditie` op `BL_posttest`. Bovendien gebeurt dit efficiënt, want het is niet meer nodig om voor elke school een aparte parameter te schatten voor het effect van die specifieke klas. -->
+
+\
+
+<!-- Kort samengevat, fit multilevel modellen wanneer -->
+
+<!-- <ul> -->
+<!-- <li> de data op een geclusterde manier tot stand zijn gekomen -->
+<!-- <li> en je de conclusies wil veralgemenen voorbij de specifieke clusters die je (willekeurig) hebt getrokken. -->
+<!-- </ul> -->
+
+
+<!-- Kort samengevat, bouw en fit multilevel modellen met random intercepten -->
+
+<!-- <ul> -->
+<!-- <li> wanneer je een uitkomstvariabele wil modelleren die is gemeten op een bepaald niveau. Hier gaat het om `BL_posttest`, gemeten op het niveau van de individuele leerlingen. -->
+<!-- <li> wanneer deze uitkomstvariabele (deels) geclusterd is op een hoger niveau. In dit voorbeeld is `BL_posttest` mogelijk geclusterd op het klasniveau. -->
+<!-- </ul> -->
 
 <!-- Daarbij is het, afhankelijk van de context en de specificatie van het model, mogelijk dat -->
 
@@ -109,13 +129,7 @@ Kort samengevat, bouw en fit multilevel modellen met random intercepten
 <!-- <li> er interacties bestaan tussen predictoren op verschillende niveaus. -->
 <!-- </ul> -->
 
-\
-
-Een multilevel model is nodig als het inderdaad zo is dat de uitkomstvariabele verschillend is tussen de klassen - met andere woorden als er een klaseffect is. Dat zal dus de eerste taak zijn bij een multilevel analyse: uitzoeken in welke mate de uitkomst geclusterd is.
-
-\
-
-Merk op dat er ook "random slope" modellen bestaan. Daarbij kan niet alleen het intercept, maar ook de helling van de rechte variëren per klas. Dergelijke modellen worden op deze pagina niet gedemonstreerd. Een goede maar erg beknopte Engelstalige demonstratie vind je <a href='https://www.rensvandeschoot.com/tutorials/lme4/' target='_blank'>hier</a>.
+In deze demonstratie komen enkel random intercepten aan bod. Daarbij verschilt dus het niveau van de uitkomst `BL_posttest` (random) per klas, ongeacht de `Conditie`. Merk op dat er ook "random slope" modellen bestaan. Daarbij kan niet alleen het intercept, maar ook de sterkte van het verband (en dus de helling van de rechte) variëren per klas. Dergelijke modellen worden op deze pagina niet gedemonstreerd. Een goede maar erg beknopte Engelstalige demonstratie vind je <a href='https://www.rensvandeschoot.com/tutorials/lme4/' target='_blank'>hier</a>.
 
 \
 
@@ -175,7 +189,7 @@ lezen$Dyslexie <- factor(lezen$Dyslexie, labels=c('Nee', 'Ja'))
 
 # Is de uitkomst geclusterd?
 
-Een multilevel analyse begint met de vraag in welke mate de uitkomstvariabele geclusterd is op een hoger niveau. Afhankelijk van het antwoord zal het eventueel nodig zijn om een multilevel model te bouwen.
+Het kan interessant zijn om te weten in welke mate de uitkomstvariabele geclusterd is op een hoger niveau. 
 
 In Bogaert et al. (2025) ligt de focus op de uitkomstvariabele `BL_posttest`. Deze variabele is gemeten op het niveau van de individuele leerlingen (niveau 1). 
 
@@ -196,7 +210,7 @@ Een visualisatie van de data opgesplitst per klas kan helpen om een idee te krij
 boxplot(lezen$BL_posttest ~ lezen$Klas)
 ```
 
-Elke boxplot stelt de data in een van de 27 klassen voor. We komen tot een gelijkaardige conclusie: er lijkt toch niet-verwaarloosbare variantie te zijn <i>tussen</i> de klassen, met andere woorden variantie op niveau 2.
+Elke boxplot stelt de data in een van de 27 klassen voor. We komen tot een gelijkaardige conclusie: er lijkt toch variantie te bestaan <i>tussen</i> de klassen, met andere woorden variantie op niveau 2.
 
 Om de verhouding tussen de varianties op verschillende niveaus te kwantificeren kunnen we de intraclass correlatie (ICC) berekenen.
 
@@ -217,7 +231,7 @@ $$\frac{0.1928}{0.1928 + 1.6473} = 0.1049823 \approx 0.105$$
 
 \
 
-In dit geval is de ICC ongeveer gelijk aan $0.105$ of $10.5\%$. We kunnen concluderen dat een multilevel model zeker zinvol is. Enkel als de ICC heel klein is, dus als de variantie op niveau 2 verwaarloosbaar klein is in vergelijking met de variantie op niveau 1 kan je beslissen om geen multilevel analyse uit te voeren. In geval van twijfel kies je er best voor om toch een multilevel model te construeren. De data zijn nu eenmaal op een bepaalde manier samengesteld (leerlingen binnen klassen), dus uitgaan van een hiërarchische structuur in de data is hoe dan ook een veilige optie.
+In dit geval is de ICC ongeveer gelijk aan $0.105$ of $10.5\%$. 
 
 Het package `performance` biedt een functie `icc` aan die de berekening voor ons kan maken. Installeer het package met `install.packages()` indien je dat nog niet hebt gedaan en laad het met `library()`.
 
@@ -241,7 +255,6 @@ Als we een nulmodel aan de functie `icc()` geven zal er geen verschil zijn tusse
 Een makkelijke manier om de random intercepten te visualiseren is met de functie `dotplot()` van het package `lattice`. Met de functie `ranef()` kan je de random intercepten van een model (hier `model0`) opvragen. Die geef je aan de functie `dotplot()`. Je ziet in de output voor elke klas het random intercept.
 
 ```{r, eval=FALSE}
-install.packages('lattice')
 library(lattice)
 
 dotplot(ranef(model0))
@@ -266,7 +279,7 @@ De punten wijken niet heel veel af van de rechte. Bijgevolg hebben we geen overt
 
 -------------------
 
-# Het effect van een predictor toetsen
+# Effecten schatten en toetsen
 
 Bogaert et al. (2025) zijn geïnteresseerd in het effect van een interventie (categorische variabele `Conditie`) op de testscore van leerlingen na de interventie `BL_posttest`. Een bijkomende controlevariabele in hun model is de score van leerlingen op de test vóór de interventie (continue variabele `BL_pretest`). 
 
@@ -278,7 +291,7 @@ We analyseren hieronder eerst het effect van `BL_pretest` op `BL_posttest` en da
 
 ## Continue predictor `BL_pretest`
 
-Eerst bouwen het model met enkel de pretestscores `BL_pretest` als predictor, naast het random intercept per `Klas`. Het effect van deze pretestscores is wetenschappelijk niet bijzonder interessant. Het is ook niet waarin Bogaert et al. (2025) direct geïnteresseerd zijn. We staan er enkel bij stil om te demonstreren hoe je het effect van een continue predictor kan toetsen.
+Eerst bouwen we het model met enkel de pretestscores `BL_pretest` als predictor, naast het random intercept per `Klas`. Het effect van deze pretestscores is wetenschappelijk niet bijzonder interessant. Het is ook niet waarin Bogaert et al. (2025) direct geïnteresseerd zijn. We staan er enkel bij stil om te demonstreren hoe je het effect van een continue predictor kan toetsen.
 
 \
 
@@ -296,7 +309,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 
 \
 
-<img id="myBtn" class="modalBtn" src="mlm1-diagram1.PNG" width="200px">
+<img id="myBtn" class="modalBtn" src="https://statlas.ugent.be/img/mlm1-diagram1.PNG" width="300px">
 
 <!-- The Modal -->
 <div id="myModal" class="modal">
@@ -310,7 +323,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 </div>
 
 <div class="modal-body">
-<img src="mlm1-diagram1.PNG" alt='Oops, something went wrong' style="border: none">
+<img src="https://statlas.ugent.be/img/mlm1-diagram1.PNG" alt='Oops, something went wrong' style="border: none">
 <br>
 
 </div>
@@ -319,12 +332,11 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 
 <br>
 
-
 \
 
-### Interpretatie en toets {-}
+### Parameters schatten {-}
 
-De belangrijkste informatie over het gefitte model bekomen we met de functie `summary()`.
+De belangrijkste informatie over de parameterschattingen bekomen we met de functie `summary()`.
 
 ```{r}
 summary(model.prtst)
@@ -334,30 +346,63 @@ summary(model.prtst)
 
 In deze output is het de coëfficiënt onder `Fixed effects` bij `BL_pretest` die ons het meest interesseert. 
 
-We zien daar `r round(fixef(model.prtst)['BL_pretest'], 5)` staan. Dat is de puntschatting voor het effect van `BL_pretest` op `BL_posttest`, controlerend voor het klaseffect. Hier schatten we dat de score op `BL_posttest` gemiddeld `r round(fixef(model.prtst)['BL_pretest'], 5)` punten hoger ligt wanneer de score op `BL_pretest` met 1 eenheid toeneemt, controlerend voor het klaseffect. 
+We zien daar `r round(fixef(model.prtst)['BL_pretest'], 5)` staan. Dat is de puntschatting voor het effect van `BL_pretest` op `BL_posttest`, controlerend voor het klaseffect. Hier schatten we dat de score op `BL_posttest`, gemiddeld over alle leerlingen van alle klassen heen, `r round(fixef(model.prtst)['BL_pretest'], 5)` punten hoger ligt wanneer de score op `BL_pretest` met 1 eenheid toeneemt, controlerend voor het klaseffect. 
 
-Op dezelfde rij vinden we de nodige informatie om het effect van `BL_pretest` ook te toetsen.
-
-<ul>
-<li> De nulhypothese stelt dat de populatieparameter $\beta_{pretest}$ gelijk is aan 0. In dat geval is er geen effect van `BL_pretest`.
-<li> De alternatieve hypothese stelt dat de parameter in de populatie $\beta_{pretest}$ verschillend is van 0. In dat geval is er wel een effect van `BL_pretest`.
-</ul>
-
-Gezien de p-waarde ongeveer gelijk is aan `r round(summary(model.prtst)$coefficients['BL_pretest', 'Pr(>|t|)'], 3)` kunnen we de nulhypothese verwerpen op het 5% significantieniveau.
-
-\
-
-Het is een goed idee om naast puntschattingen en p-waarden ook betrouwbaarheidsintervallen voor de parameters te rapporteren. Dat kan met de functie `confint()`.
+Het is een goed idee om naast puntschattingen ook betrouwbaarheidsintervallen te rapporteren. Dat kan met de functie `confint()`. Standaard krijg je een 95%-betrouwbaarheidsinterval.
 
 ```{r}
 confint(model.prtst)
 ```
 
-Merk op dat het 95%-betrouwbaarheidsinterval voor het effect van `BL_pretest` de waarde 0 niet bevat. Dat stemt natuurlijk overeen met de conclusie van de toets hierboven.
+\
+
+Terzijde, de output van `summary(model.prtst)` bevat ook een intercept bij de `Fixed effects`. Het gaat hier over het intercept over alle klassen heen. Voor een leerling met `BL_pretest` gelijk aan 0 verwachten we een score van `0.02334` op de `BL_posttest`.
 
 \
 
-Ten slotte, de output van `summary(model.prtst)` bevat ook een intercept bij de `Fixed effects`. Het gaat hier over het intercept over alle klassen heen. Voor een leerling met `BL_pretest` = 0 verwachten we een score van `0.02334` op de `BL_posttest`.
+### Toetsen {-}
+
+De relevante nulhypothese en alternatieve hypothese zijn de volgende.
+
+<ul>
+<li> De nulhypothese stelt dat de populatieparameter $\beta_{pretest}$ gelijk is aan 0. In dat geval is er geen effect van `BL_pretest`.
+<li> De alternatieve hypothese stelt dat de populatieparameter $\beta_{pretest}$ verschillend is van 0. In dat geval is er wel een effect van `BL_pretest`.
+</ul>
+
+Op dezelfde rij in de output van `summary()` (zie hierboven) vinden we ook de nodige informatie om het effect van `BL_pretest` te toetsen. Deze werkwijze zal echter niet in elke situatie werken. Met name bij een categorische predictor en bij modellen met een interactie-effect zal je met `summary()` vaak niet de gewenste toets kunnen uitvoeren. Daarom demonstreren we hier meteen een werkwijze die wel algemeen toepasbaar is.
+
+Die werkwijze bestaan erin dat we:
+
+<ol>
+<li> overgaan tot effectcodering van alle categorische predictoren
+<li> een modelvergelijking uitvoeren met de functie `Anova()` uit het package `car`
+<li> het argument `type=3` meegeven aan `Anova()`
+</ol>
+
+Meer uitleg over effectcodering en type III toetsen kan je vinden <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=64' target='_blank'>in deze syllabus</a> vanaf sectie 5.3. De uitleg gebeurt in de context van klassieke lineaire regressie (dus niet multilevel modellen) maar de principes zijn identiek.
+
+\
+
+In `model.prtst` zijn geen categorische predictoren, dus die stap kunnen we overslaan. Het argument `type=3` speelt enkel een rol wanneer er een interactie-effect in het model zit, maar voor de volledigheid voegen we het hier toch toe.
+
+```{r}
+library(car)
+Anova(model.prtst, type=3)       # Let op de hoofdletter "A"
+```
+
+\
+
+```{r, echo=FALSE}
+prtst.Anova <- Anova(model.prtst, type=3)
+p.prtst <- round(prtst.Anova$`Pr(>Chisq)`[2], 3)
+```
+
+
+Aangezien de p-waarde ongeveer gelijk is aan `r p.prtst` kunnen we de nulhypothese verwerpen op het 5% significantieniveau.
+
+\
+
+Voor een vollediger voorbeeld van deze werkwijze, zie <a href='#Anova-vb'>verderop</a>.
 
 \
 
@@ -367,7 +412,7 @@ Het model dat we zonet hebben gefit met `lmer()` kan visueel worden weergegeven 
 
 <ul>
 <li> Elke klas heeft een eigen rechte omdat elke klas een eigen random intercept heeft.
-<li> De rechten zijn parallel omdat het effect van `BL_pretest` in elke klas gelijk is. Het is met andere woorden een fixed effect.^[Het is perfect mogelijk om dit effect ook te laten variëren per klas (of algemener, op niveau 2). In dat geval spreken we van een random slope per klas.]
+<li> De rechten zijn parallel omdat het effect van `BL_pretest` in elke klas gelijk is. Het is met andere woorden louter een fixed effect in dit model.^[Het is perfect mogelijk om dit effect ook te laten variëren per klas (of algemener, op niveau 2). In dat geval spreken we van een random slope per klas.]
 </ul>
 
 ```{r, include=FALSE}
@@ -404,7 +449,7 @@ Bovenstaande visualisatie is omslachtig om te maken en leggen we daarom hier nie
 Een visualisatie enkel van het fixed effect van `BL_pretest` is makkelijker, dankzij het package `effects`. Je geeft de predictor en het model aan de functie `effect()` en geeft dit op zijn beurt aan de functie `plot()`.
 
 ```{r, eval=FALSE}
-install.packages('effects')
+install.packages('effects') # eenmalig
 library(effects)
 
 plot(effect('BL_pretest', model.prtst)) 
@@ -419,7 +464,7 @@ plot(effect('BL_pretest', model.prtst))
 
 ## Categorische predictor `Conditie`
 
-De centrale focus van Bogaert et al. (2025) was een hypothese over het effect van de predictor `Conditie` op `BL_posttest`.
+De centrale focus in Bogaert et al. (2025) was een hypothese over het effect van de predictor `Conditie` op `BL_posttest`.
 
 \
 
@@ -437,7 +482,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 
 \
 
-<img id="myBtn2" class="modalBtn" src="mlm1-diagram2.PNG" width="200px">
+<img id="myBtn2" class="modalBtn" src="https://statlas.ugent.be/img/mlm1-diagram2.PNG" width="300px">
 
 <!-- The Modal -->
 <div id="myModal2" class="modal">
@@ -451,7 +496,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 </div>
 
 <div class="modal-body">
-<img src="mlm1-diagram2.PNG" alt='Oops, something went wrong' style="border: none">
+<img src="https://statlas.ugent.be/img/mlm1-diagram2.PNG" alt='Oops, something went wrong' style="border: none">
 <br>
 
 </div>
@@ -464,9 +509,9 @@ Merk op dat de predictor `Conditie` in het diagram gesitueerd is op niveau 2. De
 
 \
 
-### Interpretatie en toets {-}
+### Parameters schatten {-}
 
-Opnieuw vragen we de belangrijkste informatie op met `summary()`. De predictor `Conditie` is een binaire categorische variable. Daardoor is er slechts 1 parameter die voor het effect van `Conditie` codeert. De schatting van die ene parameter met bijhorende toets is te vinden onder `Fixed effects` bij `ConditieExperimenteel`.
+We vragen de belangrijkste informatie met betrekking tot de parameterschattingen op met de functie `summary()`. De predictor `Conditie` is een binaire categorische variabele. Daardoor is er slechts 1 parameter die voor het effect van `Conditie` codeert. De schatting van die ene parameter is te vinden onder `Fixed effects` bij `ConditieExperimenteel`.
 
 ```{r}
 summary(model.cndt)
@@ -474,41 +519,13 @@ summary(model.cndt)
 
 \
 
-Hier wordt geschat dat het effect van in de experimentele groep te zitten in vergelijking met de controlegroep (= het referentieniveau), controlerend voor de andere predictoren, gelijk is aan `r round(fixef(model.cndt)['ConditieExperimenteel'], 5)`.
+Hier wordt geschat dat het gemiddelde effect, over alle leerlingen van alle klassen heen, van in de experimentele groep te zitten in vergelijking met de controlegroep (= het referentieniveau), controlerend voor de andere predictoren, gelijk is aan `r round(fixef(model.cndt)['ConditieExperimenteel'], 5)`. 
 
-Een leerling in de experimentele conditie heeft een score op `BL_posttest` die gemiddeld `r round(abs(fixef(model.cndt)['ConditieExperimenteel']), 5)` punten lager ligt dan een leerling in de controleconditie, controlerend voor het klaseffect en voor `BL_pretest`. 
-
-Op basis van de bijhorende p-waarde kunnen we een conclusie formuleren met betrekking tot de toets van deze parameter. 
-
-<ul>
-<li> De nulhypothese stelt dat de populatieparameter $\beta_{ConditieExperimenteel}$ gelijk is aan 0. Dat wil zeggen dat er geen effect is van `Conditie`.
-<li> De alternatieve hypothese stelt dat de populatieparameter $\beta_{ConditieExperimenteel}$ verschillend is van 0. Als dat klopt is er wel een effect van `Conditie`.
-</ul>
-
-In dit voorbeeld is de p-waarde ongeveer gelijk aan `r round(summary(model.cndt)$coefficients[3, 5], 3)`. Dit is groter dan 0.05 waardoor we de nulhypothese niet kunnen verwerpen op het 5% significantieniveau.
-
-Deze toets van het effect van `Conditie` kan worden afgelezen uit de output van `summary()` omdat er slechts 1 parameter is die codeert voor dit effect. Dit zal niet kunnen wanneer de categorische predictor meer dan 2 mogelijke waarden kan aannemen en er dus meer dan 1 parameter codeert voor het effect van die predictor.
-
-Een modelvergelijking maakt dit wel mogelijk. Daarbij worden twee modellen vergeleken: een model waarin de predictor `Conditie` is opgenomen en een model zonder `Conditie` dat voor het overige identiek is. Deze modelvergelijking kan met de functie `Anova()` uit het package `car`. 
-
-```{r, eval=FALSE}
-install.packages("car")
-library(car)
-
-Anova(model.cndt)
-```
-
-```{r, echo=FALSE}
-Anova(model.cndt)
-```
+Een leerling in de experimentele conditie heeft een score op `BL_posttest` die, gemiddeld over alle leerlingen van alle klassen heen, `r round(abs(fixef(model.cndt)['ConditieExperimenteel']), 5)` punten lager ligt dan een leerling in de controleconditie, controlerend voor het klaseffect en voor `BL_pretest`. 
 
 \
 
-We kunnen vaststellen dat de p-waarde dezelfde is en bijgevolg ook de conclusie met betrekking tot de nulhypothese. Het voordeel van de modelvergelijking is dat deze aanpak ook kan worden gehanteerd wanneer de categorische variabele meer dan twee waarden kan aannemen en er bijgevolg meer dan 1 parameter is die voor het effect codeert.
-
-\
-
-Het is een goed idee om naast puntschattingen en p-waarden ook betrouwbaarheidsintervallen voor de parameters te rapporteren. Dat kan met de functie `confint()`.
+Het is een goed idee om naast puntschattingen ook betrouwbaarheidsintervallen voor de parameters te rapporteren. Dat kan met de functie `confint()`. Standaard krijg je een 95%-betrouwbaarheidsinterval.
 
 ```{r}
 confint(model.cndt)
@@ -516,12 +533,64 @@ confint(model.cndt)
 
 \
 
+### Toetsen {-}
+
+De relevante nulhypothese en alternatieve hypothese bij het toetsen van het effect van een categorische predictor zijn de volgende.
+
+<ul>
+<li> De nulhypothese stelt dat alle populatieparameters ("bèta's") die coderen voor de categorische variabele `Conditie` gelijk zijn aan 0. Dat betekent dat er geen effect is van `Conditie`.
+<li> De alternatieve hypothese stelt dat minstens een van deze populatieparameters verschillend is van 0. Als dat klopt is er wel een effect van `Conditie`.
+</ul>
+
+\
+
+In dit specifieke geval zouden we de toets kunnen uitvoeren op basis van de output van `summary()`.^[In dit specifieke geval kan het resultaat van deze toets worden afgelezen uit de output van `summary()` omdat er slechts 1 parameter is die codeert voor dit effect. Dit zal niet kunnen wanneer de categorische predictor meer dan 2 mogelijke waarden kan aannemen en er dus meer dan 1 parameter codeert voor het effect van die predictor. Bovendien is er in dit model geen interactie-effect aanwezig. Het toetsen van hoofdeffecten in modellen met een interactie-effect vereist extra aandacht en voorzichtigheid.] Omdat dit in veel situaties niet mogelijk is, zullen we hier focussen op een algemeen toepasbare werkwijze:
+
+<ol>
+<li> overgaan tot effectcodering van alle categorische predictoren
+<li> een modelvergelijking uitvoeren met de functie `Anova()` uit het package `car`
+<li> het argument `type=3` meegeven aan `Anova()`
+</ol>
+
+Meer uitleg over effectcodering en type III toetsen kan je vinden <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=64' target='_blank'>in deze syllabus</a> vanaf sectie 5.3. De uitleg gebeurt in de context van klassieke lineaire regressie (dus niet multilevel modellen) maar de principes zijn identiek.
+
+\
+
+Voor de eerste stap moeten we het model opnieuw fitten, waarbij we een extra argument `contrasts` meegeven.
+
+```{r}
+model.cndt.effect <- lmer(formula = BL_posttest ~ BL_pretest + Conditie + (1|Klas), 
+                          contrasts=list(Conditie=contr.sum),
+                          data=lezen)
+```
+
+\
+
+```{r}
+library(car)
+Anova(model.cndt.effect, type=3)
+```
+
+Het argument `type=3` speelt enkel een rol wanneer er een interactie-effect in het model aanwezig is, maar voor de volledigheid voegen we het hier toch toe.
+
+\
+
+```{r, echo=FALSE}
+cndt.Anova <- Anova(model.cndt.effect, type=3)
+p.cndt <- round(cndt.Anova$`Pr(>Chisq)`[3], 3)
+```
+
+De p-waarde is ongeveer gelijk aan `r p.cndt`. Dit is groter dan 0.05 waardoor we de nulhypothese niet kunnen verwerpen op het 5% significantieniveau.
+
+\
+
+
 ### Visualisatie {-}
 
 Het (fixed) effect van `Conditie` kan eenvoudig gevisualiseerd worden met het package `effects`. Je geeft de predictor en het model aan de functie `effect()` en geeft dit op zijn beurt aan de functie `plot()`.
 
 ```{r, eval=FALSE}
-install.packages('effects')
+install.packages('effects') # eenmalig
 library(effects)
 
 plot(effect('Conditie', model.cndt))
@@ -554,7 +623,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 
 \
 
-<img id="myBtn3" class="modalBtn" src="mlm1-diagram3.PNG" width="200px">
+<img id="myBtn3" class="modalBtn" src="https://statlas.ugent.be/img/mlm1-diagram3.PNG" width="300px">
 
 <!-- The Modal -->
 <div id="myModal3" class="modal">
@@ -568,7 +637,7 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 </div>
 
 <div class="modal-body">
-<img src="mlm1-diagram3.PNG" alt='Oops, something went wrong' style="border: none">
+<img src="https://statlas.ugent.be/img/mlm1-diagram3.PNG" alt='Oops, something went wrong' style="border: none">
 <br>
 
 </div>
@@ -577,9 +646,9 @@ In een diagram ziet dit model er zo uit (klik op de afbeelding om te vergroten):
 
 \
 
-### Interpretatie en toets {-}
+### Parameters schatten {-}
 
-De functie `summary()` geeft ons opnieuw de belangrijkste informatie.
+De functie `summary()` geeft ons de belangrijkste informatie over de parameterschattingen.
 
 ```{r}
 summary(model.ia)
@@ -591,43 +660,11 @@ Omdat zowel `Conditie` als `Dyslexie` slechts 2 waarden kunnen aannemen, is er 1
 
 De interpretatie van de parameter is dezelfde als bij een interactie-effect in een klassiek lineair regressiemodel. Het is het verschil in het effect van de ene variabele in de interactie op de uitkomst, wanneer de andere variabele in de interactie met 1 eenheid toeneemt en wanneer alle andere predictoren constant blijven.
 
-In dit geval schatten we dat het effect van de interventie op `BL_posttest` toeneemt met `r round(fixef(model.ia)['ConditieExperimenteel:DyslexieJa'], 5)` wanneer de dummyvariabele die codeert voor `Dyslexie` met 1 eenheid toeneemt, terwijl `BL_pretest` en `Klas` gelijk blijven. De dummy voor `Dyslexie` die toeneemt met 1 eenheid betekent "wanneer `Dyslexie` de waarde `Ja` heeft in plaats van `Nee`".^[Wanneer categorische variabelen in een model aanwezig zijn, is het altijd belangrijk om op de hoogte te zijn van de details van de codering, en in het bijzonder van het gekozen referentieniveau.] 
+In dit geval schatten we dat het effect van de interventie op `BL_posttest` gemiddeld over alle leerlingen van alle klassen heen, toeneemt met `r round(fixef(model.ia)['ConditieExperimenteel:DyslexieJa'], 5)` wanneer de dummyvariabele die codeert voor `Dyslexie` met 1 eenheid toeneemt, terwijl `BL_pretest` en `Klas` gelijk blijven. Wanneer de dummy voor `Dyslexie` toeneemt met 1 eenheid betekent dit dat `Dyslexie` de waarde `Ja` heeft in plaats van `Nee`.^[Wanneer categorische variabelen in een model aanwezig zijn, is het altijd belangrijk om op de hoogte te zijn van de details van de codering, en in het bijzonder van het gekozen referentieniveau.]
 
 Technisch gezien kan de schatting even goed geïnterpreteerd worden in de andere richting, dus als het verschil in het effect van `Dyslexie` op `BL_posttest` wanneer `Conditie` met 1 eenheid toeneemt. Gegeven de hypothese van de onderzoekers in dit voorbeeld is dat echter niet de relevante interpretatie.
 
-Omdat er slechts 1 parameter is die codeert voor de interactie kunnen we de output van `summary()` meteen gebruiken om een toets van dit interactie-effect uit te voeren.
-
-<ul>
-<li> De nulhypothese stelt dat de populatieparameter $\beta_{Conditie \times Dyslexie}$ gelijk is aan 0. In dat geval is er geen interactie-effect tussen `Conditie` en `Dyslexie`.
-<li> De alternatieve hypothese stelt dat de populatieparameter $\beta_{Conditie \times Dyslexie}$ verschillend is van 0. In dat geval is er wel een interactie-effect tussen `Conditie` en `Dyslexie`.
-</ul>
-
-De p-waarde die hoort bij deze toets is ongeveer gelijk aan `r round(summary(model.ia)$coefficients[5, 5], 3)`. Dit is groter dan 0.05 waardoor we de nulhypothese niet kunnen verwerpen op het 5%-significantieniveau.
-
-Een interactie-effect toetsen zal niet kunnen op basis van de output van `summary()` wanneer er meer dan 1 parameter codeert voor het interactie-effect. De oplossing bestaat er dan in om een modelvergelijking uit te voeren tussen twee modellen: een model waarin de interactie is opgenomen vergelijken met een model zonder die interactie maar voor het overige met identiek dezelfde predictoren. Dat kan met de functie `Anova()` uit het package `car`. Het bijkomende argument `type` kan belangrijk zijn voor de interpretatie van de coëfficiënten van de hoofdeffecten. Voor meer achtergrond bij deze keuze verwijzen we naar de uitleg <a href='https://statlas.ugent.be/cursussen/Modelvergelijking.pdf' target='_blank'>in deze cursus</a> en naar deze <a href='https://seriousstats.wordpress.com/2020/05/13/type-ii-and-type-iii-sums-of-squares-what-should-i-choose/' target='_blank'>Engelstalige externe webpagina</a>.^[Merk op dat de uitleg waarnaar verwezen wordt gebeurt in de context van "gewone" lineaire regressie. Ze is echter ook van toepassing op multilevel modellen.] Hier vermelden we alleen dat ...
-
-<ul>
-<li> ... als we kiezen voor `type=3` de interpretatie en toetsen voor alle effecten dezelfde zijn als in de output van `summary(model.ia)` hierboven.
-<li> ... de keuze tussen `type=2` en `type=3` enkel uitmaakt als er interactie-effecten in het model aanwezig zijn. (`type=1` is sowieso niet mogelijk bij de functie `Anova()`.)
-<li> ... in modellen met eerste-orde interactie-effecten de keuze tussen `type=2` en `type=3` enkel invloed heeft op de interpretatie en toetsen van hoofdeffecten. 
-</ul>
-
-```{r, eval=FALSE}
-install.packages('car')
-library(car)
-
-Anova(model.ia, type=3)
-```
-
-```{r, echo=FALSE}
-Anova(model.ia, type=3)
-```
-
-We kunnen vaststellen dat de p-waarde dezelfde is in beide werkwijzen, en bijgevolg ook de conclusie met betrekking tot de nulhypothese. Het voordeel van de modelvergelijking is dat deze aanpak ook kan worden gehanteerd wanneer er meer dan 1 parameter is die codeert voor de interactie.
-
-\
-
-Het is een goed idee om naast puntschattingen en p-waarden ook betrouwbaarheidsintervallen voor de parameters te rapporteren. Dat kan met de functie `confint()`.
+Het is een goed idee om naast puntschattingen ook betrouwbaarheidsintervallen voor de parameters te rapporteren. Dat kan met de functie `confint()`.
 
 ```{r}
 confint(model.ia)
@@ -635,12 +672,66 @@ confint(model.ia)
 
 \
 
+
+### Toetsen {.unnumbered #Anova-vb}
+
+De relevante nulhypothese en alternatieve hypothese bij het toetsen van een interactie-effect zijn de volgende.
+
+<ul>
+<li> De nulhypothese stelt dat de populatieparameter $\beta_{Conditie \times Dyslexie}$ gelijk is aan 0. In dat geval is er geen interactie-effect tussen `Conditie` en `Dyslexie`.
+<li> De alternatieve hypothese stelt dat de populatieparameter $\beta_{Conditie \times Dyslexie}$ verschillend is van 0. In dat geval is er wel een interactie-effect tussen `Conditie` en `Dyslexie`.
+</ul>
+
+\
+
+In dit specifieke geval zouden we de toets van het interactie-effect kunnen uitvoeren op basis van de output van `summary()`.^[In dit specifieke geval kan het resultaat van deze toets worden afgelezen uit de output van `summary()` omdat er slechts 1 parameter is die codeert voor dit effect. Dit zal niet kunnen wanneer de categorische predictoren in het interactie-effect meer dan 2 mogelijke waarden kunnen aannemen en er dus meer dan 1 parameter codeert voor het interactie-effect.] Omdat dit in veel situaties niet mogelijk is, zullen we hier focussen op een algemeen toepasbare werkwijze:
+
+<ol>
+<li> overgaan tot effectcodering van alle categorische predictoren
+<li> een modelvergelijking uitvoeren met de functie `Anova()` uit het package `car`
+<li> het argument `type=3` meegeven aan `Anova()`
+</ol>
+
+Meer uitleg over effectcodering en type III toetsen kan je vinden <a href='https://statlas.ugent.be/cursussen/MetPsy_cursus20-21_lineaire_regr.pdf#page=64' target='_blank'>in deze syllabus</a> vanaf sectie 5.3. De uitleg gebeurt in de context van klassieke lineaire regressie (dus niet multilevel modellen) maar de principes zijn identiek.
+
+\
+
+Voor de eerste stap moeten we het model opnieuw fitten, waarbij we een extra argument `contrasts` meegeven.
+
+```{r}
+model.ia.effect <- lmer(formula = BL_posttest ~ BL_pretest + Conditie*Dyslexie + (1|Klas), 
+                        data=lezen,
+                        contrasts=list(Conditie=contr.sum, Dyslexie=contr.sum))
+```
+
+\
+
+Vervolgens voeren we een modelvergelijking uit waarbij we het model met het interactie-effect vergelijken met het model zonder. We kiezen steeds voor `type=3`. 
+
+```{r}
+library(car)
+Anova(model.ia.effect, type=3)
+```
+
+\
+
+```{r, echo=FALSE}
+ia.Anova <- Anova(model.ia.effect, type=3)
+p.ia <- round(ia.Anova$`Pr(>Chisq)`[5], 3)
+```
+
+
+De p-waarde is ongeveer gelijk aan `r p.ia`. Dit is groter dan 0.05 waardoor we de nulhypothese niet kunnen verwerpen op het 5% significantieniveau.
+
+\
+
+
 ### Visualisatie {-}
 
 Het interactie-effect tussen `Conditie` en `Dyslexie` kan eenvoudig gevisualiseerd worden met het package `effects`. Je geeft `Conditie*Dyslexie` en het model `model.ia` aan de functie `effect()` en geeft dit op zijn beurt aan de functie `plot()`.
 
 ```{r, eval=FALSE}
-install.packages('effects')
+install.packages('effects') # eenmalig
 library(effects)
 
 plot(effect('Conditie*Dyslexie', model.ia)) 
@@ -659,7 +750,7 @@ Omdat `Conditie*Dyslexie` een interactie-effect voorstelt krijgen we meerdere pl
 
 # Varianten en uitbreidingen
 
-Het voorbeeld op deze pagina reikt handvaten aan om zelf multilevel modellen te bouwen. Er zijn echter veel concrete situaties denkbaar waarin je de hier gedemonstreerde modellen en bijhorende code zal moeten aanpassen zodat ze jouw concrete onderzoeksvraag kan helpen beantwoorden. 
+Het voorbeeld op deze pagina reikt handvaten aan om zelf multilevel modellen te fitten. Er zijn echter veel concrete situaties denkbaar waarin je de hier gedemonstreerde modellen en bijhorende code zal moeten aanpassen zodat ze jouw concrete onderzoeksvraag kan helpen beantwoorden. 
 
 Opties om de hierboven gedemonstreerde technieken toepasbaar te maken op jouw specifieke casus zijn onder meer de volgende.
 
@@ -673,9 +764,6 @@ In random slope modellen hebben onderzoekers soms bovendien de bedoeling om de v
 
 \
 
-Andere Statlaspagina's zullen dieper ingaan op sommige van deze varianten en uitbreidingen.
-
-\
 
 ------------------
 
