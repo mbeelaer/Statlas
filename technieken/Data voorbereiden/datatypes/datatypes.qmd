@@ -1,0 +1,480 @@
+---
+title: "Datatypes: identificeren & converteren"
+format: 
+  html:
+    embed-resources: true # self-contained html file
+    highlight-style: arrow
+    include-after-body: datatypes-styling.html # bevat CSS (default van Quarto overwriten) + JS (codelinks open in new tab)
+    code-link: true # functies in output doc zijn clickable links naar helppagina
+
+        
+# ===================
+# Code Execution and Chunk appearance
+# ===================
+knitr:
+  opts_chunk:
+    comment: ''
+    prompt: false
+execute:
+  code-overflow: wrap
+  options:
+    width: 120 # width of R console output (in characters)
+theme:
+  light: lightly
+  dark: darkly
+
+# ===================
+# Page layout
+# ===================  
+toc: true
+toc-depth: 2
+toc-location: left
+toc-title: Inhoudstafel
+number-sections: true
+anchor-sections: true 
+---
+
+\
+
+------------------------
+
+```{r, echo=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete_mnpl.csv")
+vertrouwen <- read.csv("https://statlas.ugent.be/datasets/vertrouwen_mnpl.csv")
+```
+
+\
+
+Op deze pagina behandelen we de belangrijkste datatypes in R.
+
+Meer informatie over hoe je deze pagina kan gebruiken vind je in deze <a href="https://statlas.ugent.be/andere paginas/handleiding.html" target='_blank'>handleiding</a>.
+
+De analyse gebeurt met behulp van R en RStudio. Een inleiding tot deze software vind je <a href="https://ufora.ugent.be/d2l/le/discovery/view/course/386505" target="_blank">hier</a>.
+
+\
+
+------------------
+
+# Doel
+
+R kent verschillende types data. 
+
+We bespreken de belangrijkste datatypes hieronder. De nadruk ligt op praktische aspecten. 
+
+<ul>
+<li> Hoe kan je achterhalen wat het datatype van een vector is?
+<li> Hoe kan je een vector omzetten van een datatype naar een ander?
+</ul>
+
+\
+
+------------------
+
+# Wat zijn datatypes?
+
+Een professor statistiek vroeg aan 42 studenten in zijn klas om een korte enquête in te vullen. 
+
+De prof vroeg onder meer naar hun naam. Hun antwoorden verzamelde hij in een vector met behulp van de functie `c()`.
+
+```{r}
+namen <- c("Emma Janssens", "Ahmed El-Amrani", "Marie Dubois", "Fatima Benaissa", "Thomas Peeters", "Yasmin Özdemir", "Maxime Leroy", "Hassan Diallo", "Julie De Smet", "Karim Boussouf", "Laura Goossens", "Amina Cherifi", "Arthur Fontaine", "Sari Ndumbe", "Charlotte Maes", "Mohamed Bakali", "Amélie Bollen", "Leila Ziani", "Simon Willems", "Driss Moussaoui", "Lisa Van Damme", "Aisha Kone", "Mathias Jacobs", "Nadia Boukhari", "Camille Mertens", "Omar Bennani", "Wout Verheyden", "Samira Hadji", "Elise Lambrechts", "Youssef Talbi", "Jens De Bruyne", "Khadija Mansouri", "Manon Wouters", "Bilal Rashid", "Fien Desmet", "Zahra Ahmadi", "Kobe Devos", "Mariam Cissé", "Lotte Vandenberghe", "Tariq Ibrahim", "Dries Martens", "Aicha Benjelloun")
+```
+
+\
+
+De professor vroeg de studenten ook hoe ver van de campus ze wonen (in meter). Ook deze gegevens worden in een vector opgeslagen. 
+
+```{r}
+afstand <- c(643.7376, 724.2048, 4828.032, 160.9344, 3218.688, 804.672, 1770.2784, 1609.344, 643.7376, 724.2048, 643.7376, 482.8032, 3701.4912, 80.4672, 241.4016, 402.336, 965.6064, 1287.4752, 313.82208, 8046.72, 965.6064, 611.55072, 7242.048, 2011.68, 1207.008, 160.9344, 685.580544, 1126.5408, 241.4016, 1126.5408, 289.68192, 1255.28832, 1287.4752, 3218.688, 482.8032, 32186.88, 16093.44, 482.8032, 1609.344, 450.61632, NA, 1448.4096)
+```
+
+\
+
+Het is duidelijk dat het bij `namen` om een heel ander soort gegevens gaat dan bij `afstand`. Namen worden uitgedrukt in tekst, terwijl de afstand tot de campus een numerieke variabele van rationiveau is.
+
+In R zijn verschillende datatypes ingebouwd als weerspiegeling van het feit dat er verschillende soorten gegevens bestaan, elk met hun eigen kenmerken en mogelijkheden.
+
+De datatypes in R zijn verwant aan meetniveaus van variabelen (ook meetschalen genoemd). Meer uitleg daarover vind je <a href='https://statlas.ugent.be/cursussen/StatI.20-21.meetniveaus.pdf' target='_blank'>hier</a>. Merk wel op dat er niet altijd een één-op-één relatie bestaat tussen een meetniveau en een R-datatype.
+
+\
+
+------------------
+
+# Het datatype opvragen
+
+Elke vector in R heeft een datatype. Hoe kan je het datatype van een vector achterhalen? 
+
+Wanneer je de vector aan de functie `class()` geeft, dan krijg je het datatype als output. 
+
+```{r}
+class(namen)
+class(afstand)
+```
+
+\
+
+Als gebruiker hoef je niet uitdrukkelijk een datatype toe te wijzen aan een vector. De vector `hand` is automatisch een `character` vector geworden doordat je er tekst (tussen aanhalingstekens) in hebt opgeslagen, terwijl `afstand` vanzelf een `numeric` vector is omdat je er getallen in hebt gestoken.
+
+\
+
+-------------------------
+
+# Overzicht datatypes
+
+In deze sectie vind je een kort overzicht van de belangrijkste datatypes in R.
+
+\
+
+## numeric
+
+Een `numeric` vector bevat getallen met decimalen. Je kan allerlei bewerkingen uitvoeren met deze gegevens, zoals optellen, vermenigvuldigen, gemiddeldes berekenen en zo meer. Hieronder zie je opnieuw de vector `afstand`.
+
+```{r}
+afstand <- c(643.7376, 724.2048, 4828.032, 160.9344, 3218.688, 804.672, 1770.2784, 1609.344, 643.7376, 724.2048, 643.7376, 482.8032, 3701.4912, 80.4672, 241.4016, 402.336, 965.6064, 1287.4752, 313.82208, 8046.72, 965.6064, 611.55072, 7242.048, 2011.68, 1207.008, 160.9344, 685.580544, 1126.5408, 241.4016, 1126.5408, 289.68192, 1255.28832, 1287.4752, 3218.688, 482.8032, 32186.88, 16093.44, 482.8032, 1609.344, 450.61632, NA, 1448.4096)
+```
+
+\
+
+## integer
+
+Het `integer` datatype is enkel voor <i>gehele</i> getallen. In de praktijk mag je hiervoor vaak het `numeric` type gebruiken, maar er zijn situaties waarin je beter uitdrukkelijk het `integer` type hanteert.
+
+Hieronder geven we gehele getallen aan de functie `c()` en stoppen dit in het object `aantal.kinderen`. 
+
+```{r}
+aantal.kinderen <- c(2,4,0,1,1,2)
+```
+
+\
+
+Wat verwacht je dat de output zal zijn van het commando `class(aantal.kinderen)`? Mogelijk denk je `integer`.
+
+```{r}
+class(aantal.kinderen)
+```
+
+Dat blijkt niet het geval te zijn. R zal getallen - ook gehele getallen - standaard opslaan als `numeric`. Je kan dit gedrag tegengaan door een hoofdletter `L` te plaatsen na elk getal. Daarmee dwing je R om de getallen op te slaan als een echte `integer` vector.
+
+```{r}
+aantal.kinderen2 <- c(2L,4L,0L,1L,1L,2L)
+class(aantal.kinderen2)
+```
+
+\
+
+In de praktijk is het handiger om eerst de gehele getallen in een `numeric` vector op te slaan en die daarna om te zetten naar een `integer` vector. Hoe je een vector van het ene naar het andere type kan omzetten lees je <a href='#convert'>verderop</a>.
+
+\
+
+## character
+
+Het datatype `character` dient om tekstuele gegevens op te slaan. Hieronder vind je een voorbeeld van de namen van 42 studenten.
+
+```{r}
+namen <- c("Emma Janssens", "Ahmed El-Amrani", "Marie Dubois", "Fatima Benaissa", "Thomas Peeters", "Yasmin Özdemir", "Maxime Leroy", "Hassan Diallo", "Julie De Smet", "Karim Boussouf", "Laura Goossens", "Amina Cherifi", "Arthur Fontaine", "Sari Ndumbe", "Charlotte Maes", "Mohamed Bakali", "Amélie Bollen", "Leila Ziani", "Simon Willems", "Driss Moussaoui", "Lisa Van Damme", "Aisha Kone", "Mathias Jacobs", "Nadia Boukhari", "Camille Mertens", "Omar Bennani", "Wout Verheyden", "Samira Hadji", "Elise Lambrechts", "Youssef Talbi", "Jens De Bruyne", "Khadija Mansouri", "Manon Wouters", "Bilal Rashid", "Fien Desmet", "Zahra Ahmadi", "Kobe Devos", "Mariam Cissé", "Lotte Vandenberghe", "Tariq Ibrahim", "Dries Martens", "Aicha Benjelloun")
+
+class(namen)
+```
+
+\
+
+`character` vectoren gebruik je doorgaans voor tekstdata met heel veel verschillende waarden en/of tekstdata waarbij er geen volledige lijst van mogelijke waarden bestaat. Iemands naam is natuurlijk een goed voorbeeld: er zijn enorm veel verschillende namen en als je mensen hun naam vraagt in een enquête ga je hen niet dwingen om te kiezen uit een vooraf vastgelegde lijst met opties.
+
+Voor categorische variabelen met een vaststaand, klein aantal niveaus is het beter om de gegevens in een ander soort vector op te slaan, met name een `factor` vector. Sommige R-functies zullen zelfs vereisen dat je categorische gegevens als een `factor` vector opslaat.
+
+\
+
+## factor
+
+Het `factor` datatype dient om waarden van een categorische variabele op te slaan, wanneer het gaat om een variabele met een gelimiteerd aantal mogelijke waarden. 
+
+::: {.column-margin}
+
+Waarden van een categorische variabele noemen we "niveaus".
+
+:::
+
+Hieronder vind je gegevens over de dominante hand van studenten. Er zijn maar twee niveaus: `Links` en `Rechts`. Als we de functie `c()` gebruiken, dan zal het object `hand` echter een `character` vector zijn.
+
+```{r}
+hand <- c("Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts")
+
+class(hand)
+```
+
+\
+
+De vector `hand` kan je nu converteren naar een `factor` vector met de functie `factor()`.
+
+```{r}
+hand <- factor(hand)
+```
+
+\
+
+Eenmaal je een `factor` vector hebt, kan je bijvoorbeeld opvragen wat de niveaus zijn van `hand`.
+
+```{r}
+levels(hand)
+```
+
+\
+
+Het is ook mogelijk om een `integer` vector om te zetten in een `factor` vector. Dat heeft natuurlijk enkel zin als de waarden van de `integer` vector (gehele getallen dus) eigenlijk code zijn voor de niveaus van een categorische variabele, zoals in de tabel hieronder.
+
+<table>
+  <thead>
+    <tr>
+      <th>Cijfercode</th>
+      <th>Niveau</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Alleenstaand </td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Gehuwd</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Gescheiden</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Wettelijk samenwonend</td>
+    </tr>
+  </tbody>
+</table>
+
+\
+
+Meer uitleg over het converteren van vectoren van het ene naar het andere datatype vind je <a href='#convert'>verderop</a>.
+
+\
+
+### Ordinale gegevens {-}
+
+Een van de voordelen van `factor` in vergelijking met `character` is dat je uitdrukkelijk een rangschikking kan toekennen aan de niveaus. Je kan met andere woorden een <i>ordinale</i> categorische variabele opslaan. Je kan daarvoor het argument `ordered=TRUE` van de functie `factor()` gebruiken. Op deze pagina gaan we hier niet verder op in.
+
+\
+
+
+## logical
+
+Het `logical` datatype kan slechts twee waarden aannemen: `TRUE` en `FALSE`. Dit datatype dient om aan te geven of iets wel of niet het geval is.
+
+Zoals bij alle andere datatypes is het mogelijk om zelf een vector aan te maken van dit type. Hieronder bijvoorbeeld wordt gevraagd aan de 42 studenten of ze in de voorbije 12 maanden een opleiding hebben gevolgd.
+
+```{r}
+opleiding <- c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE)
+```
+
+\
+
+Een interessante mogelijkheid is om een `logical` vector te maken aan de hand van een conditie of voorwaarde. Als aan de conditie is voldaan, dan komt in de nieuwe vector `TRUE` te staan en indien niet, dan staat er `FALSE`. 
+
+Je zou je bijvoorbeeld kunnen afvragen welke studenten verder dan 1000 meter van de campus wonen. Als de student inderdaad verder woont (dit is de conditie), dan krijgt die student `TRUE` voor de nieuwe vector en in alle andere gevallen `FALSE`.
+
+Met de onderstaande code kan je de conditie uitdrukken. 
+
+```{r}
+afstand > 1000
+```
+
+Doorgaans wil je dit meteen in een vector opslaan. 
+
+```{r}
+meerdan1000m <- afstand > 1000
+```
+
+Voor de zekerheid controleren we even door beide variabelen naast elkaar te leggen.
+
+```{r}
+data.frame(afstand, meerdan1000m)
+```
+
+\
+
+-------------------------
+
+# Converteren {#convert}
+
+Soms is het mogelijk om gegevens van een datatype om te zetten of te converteren naar een ander datatype. Dat kan met verschillende functies die allemaal beginnen met `as.`. Bijvoorbeeld, om een vector om te zetten naar type `character` gebruik je `as.character()`. 
+
+Een conversie die regelmatig voorkomt is die van een `character` naar een `factor` vector. Dat zagen we eerder al. Toen gebruikten we de functie `factor()` en niet `as.factor()`. In essentie hebben die beide functies hetzelfde resultaat: je maakt een vector van datatype `factor`. Met de functie `factor()` heb je wel wat meer opties, bijvoorbeeld om expliciet de niveaus en de labels van de categorische variabele vast te leggen.
+
+::: {.column-margin}
+
+Voor meer info kan je het commando `?factor` runnen.
+
+:::
+
+```{r}
+hand <- c("Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Links", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts", "Rechts")
+
+hand <- as.factor(hand)
+```
+
+\
+
+Sommige conversies zijn niet mogelijk en/of niet zinvol. Van een `character` vector zal je in bijna alle gevallen geen `numeric` vector kunnen maken. Je kan de code misschien wel runnen, maar de resulterende vector zal enkel ontbrekende waarden (`NA`) bevatten. 
+
+```{r}
+as.numeric(namen)
+```
+
+\
+
+-------------------------
+
+# Automatische conversie ("coercion")
+
+Een vector kan alleen maar gegevens van eenzelfde type bevatten. Als je toch verschillende soorten data in een vector probeert te verzamelen, dan zal R zelf een datatype toekennen aan die vector. Ook wanneer je een vector aan bepaalde functies geeft kan het gebeuren dat R automatisch de vector zal converteren naar een ander type. Hieronder bekijken we enkele voorbeelden.
+
+## Voorbeeld 1
+
+In het eerste voorbeeld voeg je tekstuele gegevens (tussen de aanhalingstekens) samen met getallen. Van welk type zal de vector `mengeling1` volgens jou zijn?
+
+```{r}
+mengeling1 <- c("Jasper", "Lara", 425, "Stijn")
+```
+
+\
+
+<details>
+<summary><span>Klik hier om het antwoord te zien</span></summary>
+
+<div class='meerInfo'>
+
+We vragen het datatype op met `class()`.
+
+```{r}
+class(mengeling1)
+```
+
+Het getal `425` is omgezet naar een stuk tekst. Het is alsof je `"425"` (met aanhalingstekens) had geschreven. Dat zie je als je de hele vector opvraagt.
+
+```{r}
+mengeling1
+```
+
+\
+
+Een vector van type `character` kan wel `"425"` bevatten, in tekstvorm, maar een `numeric` vector zou nooit overweg kunnen met de waarden `"Jasper"`, `"Lara"` en `"Stijn"`. Daarom geeft R aan deze vector in zijn geheel het datatype `character`.
+</div>
+
+</details>
+
+\
+
+## Voorbeeld 2
+
+In een tweede voorbeeld stop je gehele getallen (met `L` erachter) en kommagetallen samen in een vector. Wat denk je dat het resultaat zal zijn?
+
+```{r}
+mengeling2 <- c(19.2, 20, 21L, 39.1)
+```
+
+\
+
+<details>
+<summary><span>Klik hier om het antwoord te zien</span></summary>
+
+<div class='meerInfo'>
+
+We vragen het datatype op met `class()`.
+
+```{r}
+class(mengeling2)
+```
+
+Een vector van type `integer` zou nooit `19.2` en `39.1` kunnen bevatten. Een `numeric` vector daarentegen kan zowel kommagetallen als gehele getallen bevatten en is dus de beste keuze om de gegeven getallen op te slaan. R zal dus van `mengeling2` automatisch een `numeric` vector maken.
+</div>
+
+</details>
+
+\
+
+## Voorbeeld 3
+
+Hieronder vind je opnieuw de vector `opleiding`. Het is duidelijk een `logical` vector.
+
+```{r}
+opleiding <- c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE)
+```
+
+\
+
+Nu geef je deze vector aan de functie `sum()`. Zal dat lukken volgens jou?
+
+```{r}
+sum(opleiding)
+```
+
+\
+
+Misschien dacht je dat R een foutmelding zou teruggeven. Dat lijkt inderdaad erg logisch. Hoe kan je nu een som maken van waarden `TRUE` en `FALSE`? 
+
+En toch krijg je een getal terug. Kan je daar een verklaring voor bedenken? Wat betekent dit getal?
+
+\
+
+<details>
+<summary><span>Klik hier om het antwoord te zien</span></summary>
+
+<div class='meerInfo'>
+
+Het getal dat `sum()` je teruggeeft is het aantal `TRUE` in de vector `opleiding`. 
+
+R voert achter de schermen een conversie uit, waarbij alle `TRUE` een `1` worden en alle `FALSE` een `0`. Daarna gaat de vector naar de functie `sum()` en komt er dus de som uit van alle `1` en `0`, wat uiteraard gelijk is aan het aantal `TRUE`.
+
+Merk op dat de oorspronkelijke vector `opleiding` gewoon blijft bestaan als `logical` vector. Die wordt niet overschreven.
+
+</div>
+
+</details>
+
+\
+
+------------------
+
+# Vectoren in dataframes
+
+Vectoren worden vaak samengebracht in dataframes.  Elke kolom in een dataframe is een vector en die bevat gegevens van een bepaalde variabele, bijvoorbeeld een vraag in een enquête. Elke rij in een dataframe is een observatie, bijvoorbeeld een individu dat een enquête heeft ingevuld. 
+
+Hieronder zie je een voorbeeld van hoe dataframes werken in R. De dataset die wordt ingeladen is een aangepaste versie van een dataset die <a href='https://vincentarelbundock.github.io/Rdatasets/doc/Stat2Data/Day1Survey.html' target='_blank'>hier</a> wordt beschreven. 
+
+Je kan de hele dataset inladen met de functie `read.csv()`. De data kan je best meteen in een object `enquete` onderbrengen zodat je die later makkelijk opnieuw kan oproepen.
+
+```{r, eval=FALSE}
+enquete <- read.csv("https://statlas.ugent.be/datasets/enquete_mnpl.csv")
+```
+
+\
+
+Dit object kan je aan de functie `class()` geven, net zoals je eerder al deed met vectoren.
+
+```{r}
+class(enquete)
+```
+
+\
+
+Als je dit object `enquete` inspecteert met de functie `str()` kan je informatie verkrijgen over de verschillende vectoren die het bevat.
+
+```{r}
+str(enquete)
+```
+
+\
+
+Elke vector bevat waarden van een variabele. Telkens staat er een drieletterwoord bij dat het datatype van die vector aangeeft, in dit dataframe: `int`, `chr` en `num`. Het is duidelijk dat een dataframe gegevens van een verschillend type kan bevatten. Binnen een kolom zijn alle gegevens wel van hetzelfde type.
+
+\
+
+
+
+

@@ -1,0 +1,168 @@
+---
+title: "Handleiding demonstraties op Statlas"
+format: 
+  html:
+    embed-resources: true # self-contained html file
+    highlight-style: arrow
+    include-after-body: handleiding-nieuw-styling.html # bevat CSS (default van Quarto overwriten) + JS (codelinks open in new tab)
+    code-link: true # functies in output doc zijn clickable links naar helppagina
+
+        
+# ===================
+# Code Execution and Chunk appearance
+# ===================
+knitr:
+  opts_chunk:
+    comment: ''
+    prompt: false
+execute:
+  code-overflow: wrap
+  options:
+    width: 120 # width of R console output (in characters)
+theme:
+  light: lightly
+  dark: darkly
+  
+# ===================
+# Page layout
+# ===================  
+toc: true
+toc-depth: 2
+toc-location: left
+toc-title: Inhoudstafel
+number-sections: true
+anchor-sections: true 
+---
+
+\
+
+------------------------
+
+Statlas heeft als doel om beknopte, maar toch realistische demonstraties te geven van een aantal statistische technieken.
+
+Alle technieken worden gedemonstreerd met behulp van R. Dat is een programmeertaal die bijzonder geschikt is voor het analyseren van data. Wie nog niet vertrouwd is met R vindt een inleiding <a href=''>in dit leerpad</a>.
+
+Op deze pagina demonstreren we even hoe de rest van deze website eruit ziet. Je zal snel merken dat de demonstratiepagina’s een speciale layout hebben met veel kleuren en kaders. Die layout is niet willekeurig, maar dient om alles overzichtelijker te maken.
+
+Het belangrijkste onderscheid is dat tussen R-code en R-output. In R zal je voortdurend instructies geven aan je computer om berekeningen te maken. Die instructies zal je geven in de vorm van code. Je computer gaat aan de slag met die instructies en geeft je het resultaat. Dat is de output.
+
+Sommige zaken zijn enkel relevant voor nieuwere Statlaspagina's. Dit wordt er telkens bij vermeld.
+
+\
+
+---
+
+# R-code
+
+R-code vind je terug in een lichtblauw kader. Deze kaders bevatten instructies die je kan kopiëren en vervolgens uitvoeren in een R-script.
+
+```{r}
+head(mtcars)
+```
+
+\
+
+Als je met de muis beweegt over een stuk code verschijnt rechts een klein pictogram. Als je daarop klikt dan wordt de code gekopieerd en je kan die vervolgens plakken in een R-script. Dit kan enkel in nieuwere Statlaspagina's.
+
+Met een #-symbool is het mogelijk om R-code van wat commentaar te voorzien. Alle code die na het #-symbool staat wordt genegeerd door R. Zulke commentaar zullen we op deze site gebruiken om kort toelichting te geven bij code. (Het is trouwens een goed idee om dat ook in je eigen code regelmatig te doen!)
+
+```{r}
+head(mtcars) # we willen de eerste 6 rijen zien van een dataset genaamd 'mtcars'
+```
+
+\
+
+Soms vind je korte stukjes R-code (zonder bijhorende output) middenin een stuk tekst. Die code zie je tegen een lichtgrijze achtergrond, bijvoorbeeld `mean(mtcars$mpg)`.
+
+Ergens in het begin van elke pagina vind je een stukje code waarmee je een dataset kan inladen in R. Dit moet je eerst uitvoeren om de code op de rest van de pagina te kunnen gebruiken. Hiermee wordt data ingeladen van het internet en wordt een dataframe genaamd `mijn_data` gemaakt.
+
+```{r}
+mijn_data <- read.csv("https://statlas.ugent.be/datasets/interesse.csv")
+```
+
+\
+
+## Meer uitleg over R-functies {-}
+
+In veel gevallen kan je klikken op de R-functies die je in de code vindt. Er opent dan een externe webpagina met documentatie bij die functie.
+
+Klik bijvoorbeeld eens op `mean()` of op de functie in onderstaand stukje code.
+
+```{r, eval=FALSE}
+class(mijn_data)
+```
+
+\
+
+Dit is enkel mogelijk in nieuwere Statlaspagina's.
+
+\
+
+# R-output 
+
+De output (zeg maar: het resultaat) van de code verschijnt in de console van RStudio. Zulke output wordt op Statlas altijd tegen een oranje achtergrond getoond, bijvoorbeeld:
+
+```{r}
+mijn_data$score.na[1:6] # we vragen de eerste 6 elementen van een vector op
+```
+
+\
+
+# Andere onderdelen
+
+## Klikbare inhoudstafel {-}
+
+Links bovenaan zag je ongetwijfeld al de inhoudstafel staan. Klikken op een titel brengt je naar de overeenkomstige plek op de pagina.
+
+\
+
+## Extra uitleg in de marge {-}
+
+In de rechtermarge kan je soms randinformatie vinden die niet in de hoofdtekst past. Het kan gaan om een verduidelijking, een voorbeeld of informatie die niet voor iedereen relevant is.
+
+::: {.column-margin}
+
+Extra uitleg
+
+:::
+
+Dit is enkel te zien in nieuwere Statlaspagina's. In oudere pagina's werd gewerkt met voetnoten onderaan de pagina.
+
+\
+
+## Links {-}
+
+Naast de R-functies die je kan aanklikken staan er hier en daar nog andere een externe link naar een andere website. Dergelijke links zijn in blauwe letters aangeduid, zoals <a href='https://www.ugent.be'>deze link naar de UGent-website</a>.
+
+\
+
+## Verborgen inhoud {-}
+
+Om de pagina overzichtelijk te houden zit soms een stukje inhoud verborgen achter een “knop”. Om die inhoud te tonen klik je op de groene regel tekst zoals hieronder. Er klapt dan een extra stukje open.
+
+<details>
+
+<summary><span>Toon/verberg het extra stuk</span></summary>
+
+<div class='meerInfo'>Hier vind je de "verborgen" inhoud.</div>
+
+</details>
+
+\
+
+
+## Referenties {-}
+
+Veel pagina’s zijn gebaseerd op realistische onderzoeksvragen uit de wetenschappelijke literatuur. Helemaal onderaan die pagina’s geven we krediet aan de tekst of teksten die als inspiratie hebben gediend.
+
+\
+
+## Dark mode {-}
+
+Sommige mensen houden niet van een grote witte pagina omdat dit te fel overkomt. Daarom vind je helemaal bovenaan rechts een knopje waarmee je kan overschakelen op "dark mode". De pagina wordt dan donkerder en de tekst krijgt een lichte kleur. 
+
+Deze optie bestaat enkel in nieuwere Statlaspagina's.
+
+\
+
+   
